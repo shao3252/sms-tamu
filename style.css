@@ -665,3 +665,9 @@ button {
 .nav-count{position:absolute;margin:-28px 0 0 20px;min-width:17px;padding:2px 5px;border-radius:20px;background:#21a45b;color:#fff;font-size:9px}
 .nav-item{position:relative}
 @media(max-width:380px){.profile-tab{font-size:10px}.post-actions{justify-content:space-between}.action-button{padding-left:4px;padding-right:4px}}
+
+.chat-head-title{flex:1;min-width:0}
+.group-settings-button{border:0;background:transparent;color:#8b929a;font-size:22px;padding:5px 8px}
+.pinned-banner{display:block;width:100%;border:0;border-left:4px solid var(--pink);background:#fff;padding:11px 14px;text-align:left;color:#686873;font-size:12px}
+.pinned-banner[hidden],.group-settings-button[hidden]{display:none!important}
+#groupSettingsForm .outline-button{align-self:stretch;margin-top:5px;padding:11px}
