@@ -24,7 +24,10 @@
 </dialog>
 <dialog id="adminDialog" class="comments-dialog admin-dialog">
   <div class="dialog-head"><h2>Admin Dashboard</h2><button class="close-dialog" id="closeAdmin">×</button></div>
-  <p class="admin-subtitle">Simamia verification, premium na admin access.</p>
+  <p class="admin-subtitle">Dhibiti akaunti, verification, Premium na ruhusa za admin.</p>
+  <div class="admin-stat-grid" id="adminStats"><div class="admin-stat"><small>Users</small><strong>—</strong></div><div class="admin-stat"><small>Verified</small><strong>—</strong></div><div class="admin-stat"><small>Premium</small><strong>—</strong></div><div class="admin-stat"><small>Admins</small><strong>—</strong></div></div>
+  <div class="admin-toolbar"><input id="adminSearch" type="search" placeholder="Tafuta jina au username..." aria-label="Tafuta user"><select id="adminFilter" aria-label="Chuja users"><option value="all">Users wote</option><option value="unverified">Hawajaverify</option><option value="verified">Verified</option><option value="premium">Premium</option><option value="admins">Admins</option><option value="normal">Normal users</option></select><button type="button" id="adminRefresh">Refresh</button></div>
+  <p class="admin-result-count" id="adminResultCount"></p>
   <div id="adminUsers" class="admin-users"><div class="empty-state">Inapakia users...</div></div>
 </dialog>
 <main class="app-main">
