@@ -983,3 +983,312 @@ document.addEventListener("click",async event=>{
 },true);
 
 initializeSMSAuth();
+
+
+// SMS TAMU LIVE LAYER — database-backed profile, social actions, realtime feed and chat.
+let liveChannel = null;
+let liveRefreshTimer = null;
+
+function getPostFromElement(element) {
+  const card = element.closest("[data-post-id]");
+  if (!card) return null;
+  return state.posts.find(post => String(post.id) === String(card.dataset.postId)) || null;
+}
+
+async function loadCloudPosts() {
+  if (!sbClient || !signedInUser) return;
+  const { data, error } = await sbClient.from("posts")
+    .select("id,user_id,content,category,format,status,created_at,profiles(display_name,username,verified,avatar_url,premium_until)")
+    .eq("status","published").order("created_at",{ascending:false}).limit(100);
+  if (error) { showToast("Feed haijapakiwa: " + error.message); return; }
+  const ids=(data||[]).map(p=>p.id);
+  let likes=[],comments=[],saved=[];
+  if(ids.length){
+    const [l,c,s]=await Promise.all([
+      sbClient.from("post_likes").select("post_id,user_id").in("post_id",ids),
+      sbClient.from("comments").select("id,post_id,user_id,content,created_at,profiles(display_name,username)").in("post_id",ids).order("created_at",{ascending:true}),
+      sbClient.from("saved_posts").select("post_id").eq("user_id",signedInUser.id).in("post_id",ids)
+    ]);
+    if(!l.error)likes=l.data||[];
+    if(!c.error)comments=c.data||[];
+    if(!s.error)saved=(s.data||[]).map(x=>x.post_id);
+  }
+  state.posts=(data||[]).map(p=>{
+    const profile=Array.isArray(p.profiles)?p.profiles[0]:(p.profiles||{});
+    const postLikes=likes.filter(x=>x.post_id===p.id);
+    const postComments=comments.filter(x=>x.post_id===p.id).map(x=>{
+      const cp=Array.isArray(x.profiles)?x.profiles[0]:(x.profiles||{});
+      return {id:x.id,userId:x.user_id,name:cp.display_name||cp.username||"Mtumiaji",text:x.content,time:new Date(x.created_at).toLocaleTimeString("sw-TZ",{hour:"2-digit",minute:"2-digit"})};
+    });
+    return {id:p.id,userId:p.user_id,name:profile.display_name||profile.username||"Mtumiaji",
+      username:profile.username||"user",avatar:profile.avatar_url||"",verified:!!profile.verified,
+      premium:!!(profile.premium_until&&new Date(profile.premium_until)>new Date()),
+      category:p.category,format:p.format,text:p.content,status:p.status,
+      time:new Date(p.created_at).toLocaleDateString("sw-TZ"),likes:postLikes.length,
+      liked:postLikes.some(x=>x.user_id===signedInUser.id),saved:saved.includes(p.id),
+      comments:postComments,mine:p.user_id===signedInUser.id};
+  });
+  renderHome();renderSearch($("searchInput").value);renderProfile();
+}
+
+async function loadLiveSocial() {
+  if(!signedInUser)return;
+  const [followingResult,followersResult]=await Promise.all([
+    sbClient.from("follows").select("followed_id").eq("follower_id",signedInUser.id),
+    sbClient.from("follows").select("follower_id").eq("followed_id",signedInUser.id)
+  ]);
+  if(followingResult.error||followersResult.error){
+    showToast("Follow list haijapakiwa: "+(followingResult.error||followersResult.error).message);return;
+  }
+  const followingIds=(followingResult.data||[]).map(x=>x.followed_id);
+  const followerIds=(followersResult.data||[]).map(x=>x.follower_id);
+  const allIds=[...new Set([...followingIds,...followerIds])];
+  let profiles=[];
+  if(allIds.length){
+    const result=await sbClient.from("profiles").select("id,username,display_name,avatar_url,verified,premium_until").in("id",allIds);
+    if(!result.error)profiles=result.data||[];
+  }
+  const map=new Map(profiles.map(p=>[p.id,p]));
+  const person=id=>{const p=map.get(id)||{};return {id,name:p.display_name||p.username||"Mtumiaji",username:p.username||"user",avatar:p.avatar_url||"",verified:!!p.verified,premium:!!(p.premium_until&&new Date(p.premium_until)>new Date())};};
+  state.following=followingIds.map(person);state.followers=followerIds.map(person);
+  renderProfile();
+}
+
+async function loadLiveChats() {
+  if(!signedInUser)return;
+  const memberships=await sbClient.from("conversation_members").select("conversation_id").eq("user_id",signedInUser.id);
+  if(memberships.error){showToast("Chat haijapakiwa: "+memberships.error.message);return;}
+  const ids=(memberships.data||[]).map(x=>x.conversation_id);
+  if(!ids.length){state.chats=[];renderChats();return;}
+  const [conversations,members,messages]=await Promise.all([
+    sbClient.from("conversations").select("id,title,is_group,created_by,created_at").in("id",ids).order("created_at",{ascending:false}),
+    sbClient.from("conversation_members").select("conversation_id,user_id").in("conversation_id",ids),
+    sbClient.from("messages").select("id,conversation_id,content,sender_id,created_at").in("conversation_id",ids).order("created_at",{ascending:false}).limit(300)
+  ]);
+  if(conversations.error){showToast("Mazungumzo haijapakiwa: "+conversations.error.message);return;}
+  const userIds=[...new Set((members.data||[]).map(x=>x.user_id).filter(id=>id!==signedInUser.id))];
+  let profiles=[];
+  if(userIds.length){const p=await sbClient.from("profiles").select("id,username,display_name,avatar_url").in("id",userIds);if(!p.error)profiles=p.data||[];}
+  const profileMap=new Map(profiles.map(p=>[p.id,p]));
+  state.chats=(conversations.data||[]).map(c=>{
+    const other=(members.data||[]).find(m=>m.conversation_id===c.id&&m.user_id!==signedInUser.id);
+    const p=other?profileMap.get(other.user_id):null;
+    const latest=(messages.data||[]).find(m=>m.conversation_id===c.id);
+    return {id:c.id,name:c.is_group?(c.title||"Kundi"):(p?.display_name||p?.username||"Mazungumzo"),
+      isGroup:!!c.is_group,otherUserId:other?.user_id||null,last:latest?.content||"Anza mazungumzo",
+      createdAt:c.created_at};
+  });
+  renderChats();
+}
+
+async function loadLiveMessages(conversationId) {
+  if(!signedInUser||!conversationId)return;
+  const {data,error}=await sbClient.from("messages")
+    .select("id,conversation_id,sender_id,content,created_at,profiles(display_name,username)")
+    .eq("conversation_id",conversationId).order("created_at",{ascending:true}).limit(300);
+  if(error){showToast("Ujumbe haujapakiwa: "+error.message);return;}
+  state.messages[conversationId]=(data||[]).map(m=>{
+    const p=Array.isArray(m.profiles)?m.profiles[0]:(m.profiles||{});
+    return {id:m.id,text:m.content,name:p.display_name||p.username||"Mtumiaji",mine:m.sender_id===signedInUser.id,
+      time:new Date(m.created_at).toLocaleTimeString("sw-TZ",{hour:"2-digit",minute:"2-digit"})};
+  });
+  renderMessages();
+  const chat=state.chats.find(c=>c.id===conversationId);
+  if(chat&&state.messages[conversationId].length)chat.last=state.messages[conversationId].at(-1).text;
+  renderChats();
+}
+
+function renderChats() {
+  $("chatList").innerHTML=state.chats.map(chat=>
+    '<button class="chat-row" data-chat-id="'+escapeHTML(chat.id)+'">'+
+    '<span class="avatar pink">'+(chat.isGroup?iconSVG("users"):escapeHTML((chat.name||"U").charAt(0).toUpperCase()))+'</span>'+
+    '<span class="chat-preview"><strong>'+escapeHTML(chat.name)+'</strong><p>'+escapeHTML(chat.last||"Anza mazungumzo")+'</p></span>'+
+    '<time>'+(chat.isGroup?"Kundi":"DM")+'</time></button>'
+  ).join("")||'<div class="empty-state">Hakuna mazungumzo. Tafuta mtu kwenye wafuasi na gusa Message.</div>';
+}
+
+function renderMessages() {
+  if(!activeChat)return;
+  const messages=state.messages[activeChat.id]||[];
+  $("chatMessages").innerHTML=messages.length?messages.map(message=>
+    '<div class="bubble '+(message.mine?"mine":"")+'">'+
+    (message.name&&!message.mine?'<strong class="bubble-name">'+escapeHTML(message.name)+'</strong>':"")+
+    escapeHTML(message.text)+'<small>'+escapeHTML(message.time||"Sasa")+'</small></div>'
+  ).join(""):'<div class="empty-state">Bado hakuna ujumbe. Tuma salamu ya kwanza.</div>';
+  $("chatMessages").scrollTop=$("chatMessages").scrollHeight;
+}
+
+async function openLiveChat(chat) {
+  if(!chat||!signedInUser)return;
+  activeChat=chat;
+  $("chatUserName").textContent=chat.name;
+  $("chatStatus").textContent=chat.isGroup?"SMS TAMU · Live":"Mazungumzo ya faragha";
+  $("chatAvatar").innerHTML=chat.isGroup?iconSVG("users"):escapeHTML((chat.name||"U").charAt(0).toUpperCase());
+  $("groupSettingsButton").hidden=true;
+  $("pinnedBanner").hidden=true;
+  $("chatWindow").hidden=false;
+  await loadLiveMessages(chat.id);
+}
+
+function openProfileList(type) {
+  const list=type==="following"?state.following:state.followers;
+  $("listDialogTitle").textContent=type==="following"?"Unafuata":"Wafuasi";
+  $("listDialogContent").innerHTML=list.length?list.map(person=>{
+    const isFollowing=state.following.some(item=>item.id===person.id);
+    const action=type==="following"
+      ?'<button class="person-action" data-unfollow="'+escapeHTML(person.id)+'">Unafuata</button>'
+      :(isFollowing?'<button class="person-action" data-unfollow="'+escapeHTML(person.id)+'">Unafuata</button>':'<button class="person-action" data-follow="'+escapeHTML(person.id)+'">Fuata</button>');
+    return '<div class="person-row"><span class="avatar pink">'+escapeHTML((person.name||"U").charAt(0).toUpperCase())+'</span>'+
+      '<span class="person-info"><strong>'+escapeHTML(person.name)+'</strong><small>@'+escapeHTML(person.username)+'</small></span>'+
+      '<div class="person-actions-live">'+action+'<button class="person-action" data-message-user-id="'+escapeHTML(person.id)+'">Message</button></div></div>';
+  }).join(""):'<div class="empty-state">Orodha bado haina mtu.</div>';
+  $("listDialog").showModal();
+}
+
+function startLiveSubscriptions() {
+  if(!sbClient||!signedInUser)return;
+  if(liveChannel)sbClient.removeChannel(liveChannel);
+  liveChannel=sbClient.channel("sms-tamu-live-"+signedInUser.id)
+    .on("postgres_changes",{event:"*",schema:"public",table:"posts"},()=>loadCloudPosts())
+    .on("postgres_changes",{event:"*",schema:"public",table:"comments"},()=>loadCloudPosts())
+    .on("postgres_changes",{event:"*",schema:"public",table:"post_likes"},()=>loadCloudPosts())
+    .on("postgres_changes",{event:"*",schema:"public",table:"follows"},()=>loadLiveSocial())
+    .on("postgres_changes",{event:"*",schema:"public",table:"messages"},payload=>{
+      const conversationId=payload.new?.conversation_id||payload.old?.conversation_id;
+      if(activeChat&&activeChat.id===conversationId)loadLiveMessages(conversationId);
+      else loadLiveChats();
+    })
+    .subscribe();
+}
+
+async function loadUserProfile() {
+  if(!signedInUser||!sbClient)return;
+  let result=await sbClient.from("profiles").select("id,username,display_name,bio,avatar_url,role,verified,premium_until").eq("id",signedInUser.id).maybeSingle();
+  if(!result.data){await new Promise(resolve=>setTimeout(resolve,600));result=await sbClient.from("profiles").select("id,username,display_name,bio,avatar_url,role,verified,premium_until").eq("id",signedInUser.id).maybeSingle();}
+  if(result.error||!result.data){showToast("Profile haijapakiwa: "+(result.error?.message||"refresh"));return;}
+  signedInProfile=result.data;
+  state.profile={name:result.data.display_name||"Mtumiaji",username:result.data.username||"user",
+    bio:result.data.bio||"",avatar:result.data.avatar_url||"",verified:!!result.data.verified,
+    role:result.data.role||"user",premiumUntil:result.data.premium_until};
+  $("adminSetting").hidden=state.profile.role!=="admin";
+  if($("authDialog").open)$("authDialog").close();
+  renderProfile();
+  await Promise.all([loadCloudPosts(),loadLiveSocial(),loadLiveChats()]);
+  startLiveSubscriptions();
+}
+
+document.addEventListener("click",async event=>{
+  const chatRow=event.target.closest("[data-chat-id]");
+  if(chatRow&&$("chatList").contains(chatRow)){
+    event.preventDefault();event.stopImmediatePropagation();
+    const chat=state.chats.find(c=>String(c.id)===String(chatRow.dataset.chatId));
+    await openLiveChat(chat);return;
+  }
+  const messageButton=event.target.closest("[data-message-user-id]");
+  if(messageButton){
+    event.preventDefault();event.stopImmediatePropagation();
+    const targetId=messageButton.dataset.messageUserId;
+    const {data,error}=await sbClient.rpc("start_direct_chat",{target_user:targetId});
+    if(error){showToast("Chat haijaanzishwa: "+error.message);return;}
+    $("listDialog").close();await loadLiveChats();
+    const chat=state.chats.find(c=>c.id===data);
+    if(chat)await openLiveChat(chat);
+    return;
+  }
+  const follow=event.target.closest("[data-follow]");
+  if(follow){
+    event.preventDefault();event.stopImmediatePropagation();
+    const {error}=await sbClient.from("follows").insert({follower_id:signedInUser.id,followed_id:follow.dataset.follow});
+    if(error&&error.code!=="23505")return showToast("Follow: "+error.message);
+    await loadLiveSocial();openProfileList("followers");return;
+  }
+  const unfollow=event.target.closest("[data-unfollow]");
+  if(unfollow){
+    event.preventDefault();event.stopImmediatePropagation();
+    const {error}=await sbClient.from("follows").delete().eq("follower_id",signedInUser.id).eq("followed_id",unfollow.dataset.unfollow);
+    if(error)return showToast("Unfollow: "+error.message);
+    await loadLiveSocial();openProfileList("following");return;
+  }
+  const save=event.target.closest('[data-action="save"]');
+  if(save){
+    event.preventDefault();event.stopImmediatePropagation();
+    const post=getPostFromElement(save);if(!post)return;
+    const result=post.saved
+      ?await sbClient.from("saved_posts").delete().eq("user_id",signedInUser.id).eq("post_id",post.id)
+      :await sbClient.from("saved_posts").insert({user_id:signedInUser.id,post_id:post.id});
+    if(result.error)return showToast("Save: "+result.error.message);
+    await loadCloudPosts();return;
+  }
+  const edit=event.target.closest('[data-action="edit"]');
+  if(edit){
+    const post=getPostFromElement(edit);if(!post)return;
+    event.preventDefault();event.stopImmediatePropagation();
+    activeEditPostId=post.id;$("editPostCategory").value=post.category;$("editPostFormat").value=post.format||"Ujumbe wa kawaida";$("editPostText").value=post.text;$("editPostDialog").showModal();return;
+  }
+  const remove=event.target.closest('[data-action="delete"]');
+  if(remove){
+    const post=getPostFromElement(remove);if(!post)return;
+    event.preventDefault();event.stopImmediatePropagation();
+    if(!confirm("Una uhakika unataka kufuta posti hii?"))return;
+    const {error}=await sbClient.from("posts").delete().eq("id",post.id).eq("user_id",signedInUser.id);
+    if(error)return showToast("Posti haijafutwa: "+error.message);
+    await loadCloudPosts();showToast("Posti imefutwa.");return;
+  }
+},true);
+
+$("commentForm").addEventListener("submit",async event=>{
+  event.preventDefault();event.stopImmediatePropagation();
+  if(!signedInUser)return showToast("Ingia kwanza.");
+  const content=$("commentInput").value.trim();if(!content)return;
+  const post=state.posts.find(p=>String(p.id)===String(activeCommentPostId));if(!post)return;
+  const {error}=await sbClient.from("comments").insert({post_id:post.id,user_id:signedInUser.id,content});
+  if(error)return showToast("Maoni: "+error.message);
+  $("commentInput").value="";await loadCloudPosts();openComments(post.id);
+},true);
+
+$("profileForm").addEventListener("submit",async event=>{
+  event.preventDefault();event.stopImmediatePropagation();
+  const display_name=$("editNameInput").value.trim();
+  const username=$("editUsernameInput").value.trim().replace(/^@/,"").replace(/\s+/g,"").toLowerCase();
+  const bio=$("editBioInput").value.trim();
+  if(!display_name||!username)return;
+  const {error}=await sbClient.from("profiles").update({display_name,username,bio}).eq("id",signedInUser.id);
+  if(error)return showToast("Wasifu: "+error.message);
+  $("profileDialog").close();await loadUserProfile();showToast("Wasifu umehifadhiwa live.");
+},true);
+
+$("editPostForm").addEventListener("submit",async event=>{
+  event.preventDefault();event.stopImmediatePropagation();
+  const content=$("editPostText").value.trim();if(!content)return;
+  const {error}=await sbClient.from("posts").update({content,category:$("editPostCategory").value,format:$("editPostFormat").value}).eq("id",activeEditPostId).eq("user_id",signedInUser.id);
+  if(error)return showToast("Hariri posti: "+error.message);
+  $("editPostDialog").close();await loadCloudPosts();showToast("Posti imebadilishwa live.");
+},true);
+
+$("chatForm").addEventListener("submit",async event=>{
+  event.preventDefault();event.stopImmediatePropagation();
+  if(!activeChat||!signedInUser)return;
+  const input=$("chatMessageInput"),content=input.value.trim();if(!content)return;
+  const {error}=await sbClient.from("messages").insert({conversation_id:activeChat.id,sender_id:signedInUser.id,content});
+  if(error)return showToast("Ujumbe: "+error.message);
+  input.value="";await loadLiveMessages(activeChat.id);await loadLiveChats();
+},true);
+
+$("avatarFile").addEventListener("change",async event=>{
+  const file=event.target.files?.[0];if(!file)return;
+  if(!file.type.startsWith("image/")){showToast("Chagua picha pekee.");event.target.value="";return;}
+  if(file.size>2*1024*1024){showToast("Picha iwe chini ya 2MB.");event.target.value="";return;}
+  const extension=(file.name.split(".").pop()||"jpg").toLowerCase().replace(/[^a-z0-9]/g,"")||"jpg";
+  const path=signedInUser.id+"/avatar-"+Date.now()+"."+extension;
+  const {error:uploadError}=await sbClient.storage.from("sms-tamu-avatars").upload(path,file,{upsert:true,contentType:file.type});
+  if(uploadError){showToast("Picha: "+uploadError.message);event.target.value="";return;}
+  const {data}=sbClient.storage.from("sms-tamu-avatars").getPublicUrl(path);
+  const {error}=await sbClient.from("profiles").update({avatar_url:data.publicUrl}).eq("id",signedInUser.id);
+  if(error){showToast("Wasifu picha: "+error.message);event.target.value="";return;}
+  event.target.value="";await loadUserProfile();showToast("Picha ya wasifu imehifadhiwa live.");
+},true);
+
+// Remove old demo-only chat and privacy descriptions once the live session starts.
+const liveHelp=document.querySelector('[data-setting="help"]');
+if(liveHelp)liveHelp.querySelector("small").textContent="Msaada na maelezo ya SMS TAMU";
+
