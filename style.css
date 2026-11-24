@@ -727,3 +727,16 @@ button {
 .auth-brand .auth-heart{font-size:0}
 .auth-brand .auth-heart:before{content:"";width:22px;height:22px;background:#ef4f8a;transform:rotate(-45deg);border-radius:4px;position:relative}
 .auth-brand .auth-heart:after{content:"";position:absolute;width:22px;height:22px;background:#ef4f8a;border-radius:50%;transform:translate(7px,-7px)}
+
+
+/* Live social/chat polish */
+.person-actions-live{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.person-action{cursor:pointer;transition:background .15s,border-color .15s}
+.person-action:hover{background:#ffe4ef;border-color:#ee9dbd}
+.chat-row{cursor:pointer;transition:background .15s}
+.chat-row:hover{background:#fff4f8}
+.chat-head-title{display:flex;flex-direction:column;gap:4px}
+.chat-head-title small{font-size:11px}
+.chat-window{box-shadow:0 8px 35px #25252c12}
+.bubble{overflow-wrap:anywhere;white-space:pre-wrap}
+@media(max-width:420px){.person-actions-live{width:100%;justify-content:flex-end}.person-row{flex-wrap:wrap}}
