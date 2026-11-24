@@ -1007,7 +1007,7 @@ $("adminRefresh").addEventListener("click",renderAdminUsers);
 $("adminPostSearch").addEventListener("input",renderAdminPosts);
 $("adminPostFilter").addEventListener("change",renderAdminPosts);
 $("adminPostsRefresh").addEventListener("click",renderAdminPosts);
-document.querySelectorAll("[data-admin-tab]").forEach(tab=>tab.addEventListener("click",()=>{document.querySelectorAll("[data-admin-tab]").forEach(x=>x.classList.toggle("active",x===tab));$("adminUsersPane").classList.toggle("active",tab.dataset.adminTab==="users");$("adminPostsPane").classList.toggle("active",tab.dataset.adminTab==="posts");if(tab.dataset.adminTab==="posts")renderAdminPosts();}));
+document.querySelectorAll("[data-admin-tab]").forEach(tab=>tab.addEventListener("click",()=>{document.querySelectorAll("[data-admin-tab]").forEach(x=>x.classList.toggle("active",x===tab));$("adminUsersPane").classList.toggle("active",tab.dataset.adminTab==="users");$("adminPostsPane").classList.toggle("active",tab.dataset.adminTab==="posts");$("adminTextsPane").classList.toggle("active",tab.dataset.adminTab==="texts");if(tab.dataset.adminTab==="posts")renderAdminPosts();if(tab.dataset.adminTab==="texts")premiumAdminLoadTexts();}));
 $("closeAdmin").addEventListener("click",()=>$("adminDialog").close());
 $("adminPosts").addEventListener("click",async event=>{
  const button=event.target.closest("[data-post-moderate],[data-post-delete]");if(!button||state.profile.role!=="admin")return;
@@ -1428,3 +1428,93 @@ function openSettingsDetail(type) {
     detail.innerHTML="<h3>Msaada wa SMS TAMU</h3><p>Feed, likes, comments, profile, follow na chat zimeunganishwa na Supabase. Ujumbe wa chat huonekana kwa washiriki wa mazungumzo pekee.</p>";
   }
 }
+
+/* Premium text library: RLS-enforced access, favorites, collections, daily text and generator */
+let premiumTextsCache=[],premiumFavorites=new Set(),premiumCollections=[],premiumCurrentView="library",premiumCurrentCategory="all",premiumDailyContent="";
+let premiumEditingId=null;
+const premiumActive=()=>state.profile.role==="admin"||(state.profile.premiumUntil&&new Date(state.profile.premiumUntil)>new Date());
+function premiumNeedLogin(){if(!signedInUser){showToast("Ingia kwanza kutumia Premium Library.");$("authDialog").showModal();return false;}return true;}
+async function premiumLoad(){
+ if(!sbClient||!signedInUser){$("premiumLibraryList").innerHTML='<div class="empty-state">Ingia ili kutumia library.</div>';return;}
+ const active=premiumActive();$("premiumLocked").hidden=active;
+ const {data,error}=await sbClient.from("premium_texts").select("id,title,content,category,collection,is_premium,is_daily,featured,status,created_at").order("created_at",{ascending:false}).limit(500);
+ if(error){$("premiumLibraryList").innerHTML='<div class="empty-state">Library: '+escapeHTML(error.message)+'</div>';return;}
+ premiumTextsCache=data||[];
+ if(active){
+  const fav=await sbClient.from("premium_text_favorites").select("text_id").eq("user_id",signedInUser.id);
+  premiumFavorites=new Set((fav.data||[]).map(x=>x.text_id));
+  const cols=await sbClient.from("premium_text_collections").select("id,name,created_at").eq("user_id",signedInUser.id).order("created_at",{ascending: false});
+  premiumCollections=cols.data||[];
+  const daily=premiumTextsCache.find(x=>x.is_daily&&x.status==="published");
+  premiumDailyContent=daily?daily.content:"Daily text itaongezwa hivi karibuni.";
+ }else{
+  premiumFavorites=new Set();premiumCollections=[];premiumDailyContent="Daily Premium Text ni kwa akaunti yenye Premium hai.";
+ }
+ $("premiumDailyText").textContent=premiumDailyContent;
+ $("premiumCollectionsPanel").hidden=premiumCurrentView!=="collections";
+ premiumRenderCollections();premiumRenderLibrary();
+}
+function premiumRenderCollections(){
+ const target=$("premiumCollectionList");if(!target)return;
+ target.innerHTML=premiumCollections.map(c=>'<div class="premium-collection-row"><span>'+escapeHTML(c.name)+'</span><button type="button" data-premium-open-collection="'+escapeHTML(c.id)+'">Fungua</button></div>').join("")||'<div class="empty-state">Bado huna collections.</div>';
+}
+function premiumRenderLibrary(){
+ const target=$("premiumLibraryList");if(!target)return;
+ const active=premiumActive();
+ let list=premiumTextsCache.filter(t=>t.status==="published"&&(!t.is_premium||active));
+ if(premiumCurrentView==="favorites")list=list.filter(t=>premiumFavorites.has(t.id));
+ if(premiumCurrentCategory!=="all")list=list.filter(t=>t.category===premiumCurrentCategory);
+ target.innerHTML=list.map(t=>'<article class="premium-text-card" data-premium-text="'+escapeHTML(t.id)+'"><div class="premium-text-meta"><span>'+escapeHTML(t.category)+'</span><span>'+escapeHTML(t.collection||"Library")+'</span>'+(t.is_premium?'<span>✦ Premium</span>':'<span>Free</span>')+(t.featured?'<span>Featured</span>':'')+'</div><h3>'+escapeHTML(t.title||"Ujumbe")+'</h3><p>'+escapeHTML(t.content)+'</p><div class="premium-text-actions"><button type="button" data-premium-copy>Copy</button>'+(active?'<button type="button" data-premium-fav="'+(premiumFavorites.has(t.id)?"true":"false")+'">'+(premiumFavorites.has(t.id)?"★ Saved":"☆ Favorite")+'</button><button type="button" data-premium-collect>Add to collection</button>':'')+'</div></article>').join("")||'<div class="empty-state">'+(premiumCurrentView==="favorites"?"Bado hujahifadhi favorites.":"Hakuna text kwenye category hii.")+'</div>';
+}
+document.querySelectorAll("[data-premium-view]").forEach(btn=>btn.addEventListener("click",()=>{premiumCurrentView=btn.dataset.premiumView;document.querySelectorAll("[data-premium-view]").forEach(x=>x.classList.toggle("active",x===btn));$("premiumCollectionsPanel").hidden=premiumCurrentView!=="collections";premiumRenderLibrary();}));
+document.querySelectorAll("[data-premium-category]").forEach(btn=>btn.addEventListener("click",()=>{premiumCurrentCategory=btn.dataset.premiumCategory;document.querySelectorAll("[data-premium-category]").forEach(x=>x.classList.toggle("active",x===btn));premiumRenderLibrary();}));
+$("premiumRefreshAccess").addEventListener("click",async()=>{await loadUserProfile();await premiumLoad();});
+$("premiumDailyCopy").addEventListener("click",async()=>{if(!premiumDailyContent)return;try{await navigator.clipboard.writeText(premiumDailyContent);showToast("Daily text copied.");}catch{showToast("Copy haikufanikiwa.");}});
+const premiumTemplates={
+ sweet:["{name}, napenda namna unavyofanya mambo madogo yaonekane ya thamani. Asante kwa kuwa sehemu nzuri ya siku yangu.","Nikikuwaza {name}, moyo wangu unapata utulivu na sababu ya kutabasamu. Natamani tuendelee kujenga furaha kwa heshima na ukweli."],
+ playful:["{name}, usijifanye hujui kuwa una kipaji cha kunifanya nicheke. Leo umeshinda tena tuzo ya mtu anayenifurahisha.","Nimejaribu kuwa serious leo, lakini nikakumbuka utani wako {name} na nikashindwa kujizuia kutabasamu."],
+ missing:["{name}, nimekumbuka mazungumzo yetu. Natumaini siku yako inaenda vizuri na unapata muda wa kupumzika.","Kuna ukaribu unaobaki moyoni hata tukiwa mbali. Nimekukumbuka {name}, na nakutakia siku yenye amani."],
+ apology:["{name}, samahani kwa nilipokukwaza. Nataka kuelewa hisia zako, kusikiliza kwa makini na kurekebisha nilipokosea.","Nathamini uhusiano wetu {name}. Sitaki maneno yangu yaumize; naomba nafasi ya kuelewa na kufanya vizuri zaidi."],
+ encourage:["{name}, hatua ndogo unazochukua zina maana. Jipe muda, endelea kujifunza na usisahau kujivunia maendeleo yako.","Najua kuna siku zinahitaji nguvu zaidi, {name}. Usikate tamaa; pumzika unapohitaji na endelea hatua kwa hatua."]
+};
+let premiumGeneratedText="";
+$("premiumGenerate").addEventListener("click",()=>{const n=$("premiumGenName").value.trim()||"rafiki yangu",m=$("premiumGenMood").value,arr=premiumTemplates[m]||premiumTemplates.sweet;premiumGeneratedText=arr[Math.floor(Math.random()*arr.length)].replaceAll("{name}",n);$("premiumGenerated").textContent=premiumGeneratedText;$("premiumGeneratedCopy").hidden=false;});
+$("premiumGeneratedCopy").addEventListener("click",async()=>{if(!premiumGeneratedText)return;try{await navigator.clipboard.writeText(premiumGeneratedText);showToast("Ujumbe copied.");}catch{showToast("Copy haikufanikiwa.");}});
+$("premiumCollectionCreate").addEventListener("click",async()=>{if(!premiumNeedLogin()||!premiumActive())return showToast("Collections ni kwa Premium active.");const name=$("premiumCollectionName").value.trim();if(!name)return showToast("Weka jina la collection.");const {data,error}=await sbClient.from("premium_text_collections").insert({user_id:signedInUser.id,name}).select("id,name").single();if(error)return showToast("Collection: "+error.message);premiumCollections.unshift(data);$("premiumCollectionName").value="";premiumRenderCollections();showToast("Collection imetengenezwa.");});
+$("premiumCollectionList").addEventListener("click",async e=>{const b=e.target.closest("[data-premium-open-collection]");if(!b)return;const {data,error}=await sbClient.from("premium_text_collection_items").select("text_id").eq("collection_id",b.dataset.premiumOpenCollection).eq("user_id",signedInUser.id);if(error)return showToast("Collection: "+error.message);premiumCurrentView="library";premiumCurrentCategory="all";const ids=new Set((data||[]).map(x=>x.text_id));$("premiumCollectionsPanel").hidden=true;document.querySelectorAll("[data-premium-view]").forEach(x=>x.classList.toggle("active",x.dataset.premiumView==="library"));const items=premiumTextsCache.filter(t=>ids.has(t.id)&&t.status==="published");$("premiumLibraryList").innerHTML=items.map(t=>'<article class="premium-text-card"><div class="premium-text-meta"><span>'+escapeHTML(t.category)+'</span></div><h3>'+escapeHTML(t.title)+'</h3><p>'+escapeHTML(t.content)+'</p><div class="premium-text-actions"><button type="button" data-premium-copy>Copy</button></div></article>').join("")||'<div class="empty-state">Collection hii haina ujumbe bado.</div>';});
+$("premiumLibraryList").addEventListener("click",async e=>{
+ const card=e.target.closest("[data-premium-text]");if(!card)return;const t=premiumTextsCache.find(x=>x.id===card.dataset.premiumText);if(!t)return;
+ if(e.target.closest("[data-premium-copy]")){try{await navigator.clipboard.writeText(t.content);showToast("Ujumbe copied.");}catch{showToast("Copy haikufanikiwa.");}}
+ if(e.target.closest("[data-premium-fav]")){if(!premiumNeedLogin()||!premiumActive())return showToast("Favorites ni kwa Premium active.");const saved=premiumFavorites.has(t.id);const q=saved?sbClient.from("premium_text_favorites").delete().eq("user_id",signedInUser.id).eq("text_id",t.id):sbClient.from("premium_text_favorites").insert({user_id:signedInUser.id,text_id:t.id});const {error}=await q;if(error)return showToast("Favorite: "+error.message);saved?premiumFavorites.delete(t.id):premiumFavorites.add(t.id);premiumRenderLibrary();showToast(saved?"Favorite imeondolewa.":"Imehifadhiwa Favorites.");}
+ if(e.target.closest("[data-premium-collect]")){if(!premiumNeedLogin()||!premiumActive())return showToast("Collections ni kwa Premium active.");if(!premiumCollections.length)return showToast("Tengeneza collection kwanza.");const pick=prompt("Chagua collection:\n"+premiumCollections.map((c,i)=>(i+1)+". "+c.name).join("\n"));const ix=Number(pick)-1,coll=premiumCollections[ix];if(!coll)return;const {error}=await sbClient.from("premium_text_collection_items").insert({collection_id:coll.id,text_id:t.id,user_id:signedInUser.id});if(error)return showToast(error.code==="23505"?"Ujumbe tayari upo kwenye collection.":"Collection: "+error.message);showToast("Ujumbe umeongezwa kwenye "+coll.name+".");}
+});
+async function premiumAdminLoadTexts(){
+ if(!signedInUser||state.profile.role!=="admin")return;
+ const {data,error}=await sbClient.from("premium_texts").select("id,title,content,category,collection,is_premium,is_daily,featured,status,created_at").order("created_at",{ascending:false}).limit(500);
+ if(error){$("premiumAdminList").innerHTML='<div class="empty-state">Admin texts: '+escapeHTML(error.message)+'</div>';return;}
+ premiumTextsCache=data||[];premiumAdminRender();
+}
+function premiumAdminRender(){
+ const term=($("premiumAdminSearch").value||"").trim().toLowerCase(),list=premiumTextsCache.filter(t=>(t.title+" "+t.content+" "+t.category+" "+t.collection).toLowerCase().includes(term));
+ $("premiumAdminList").innerHTML=list.map(t=>'<article class="admin-post-row" data-premium-admin-id="'+escapeHTML(t.id)+'"><div class="admin-post-meta"><strong>'+escapeHTML(t.title)+' <small>'+escapeHTML(t.category)+' · '+(t.is_premium?"Premium":"Free")+'</small></strong><p>'+escapeHTML(t.content)+'</p><span class="admin-post-status">'+escapeHTML(t.collection||"")+(t.is_daily?" · Daily":"")+(t.featured?" · Featured":"")+' · '+escapeHTML(t.status)+'</span></div><div class="admin-post-actions"><button type="button" data-premium-edit>Edit</button><button type="button" data-premium-hide="'+(t.status==="published"?"hidden":"published")+'">'+(t.status==="published"?"Hide":"Publish")+'</button><button type="button" class="danger" data-premium-delete>Delete</button></div></article>').join("")||'<div class="empty-state">Hakuna text inayolingana.</div>';
+}
+function premiumAdminClear(){premiumEditingId=null;$("premiumAdminTitle").value="";$("premiumAdminCategory").value="Hot Text";$("premiumAdminCollection").value="";$("premiumAdminContent").value="";$("premiumAdminIsPremium").checked=true;$("premiumAdminDaily").checked=false;$("premiumAdminFeatured").checked=false;$("premiumAdminSave").textContent="Hifadhi ujumbe";$("premiumAdminCancel").hidden=true;}
+$("premiumAdminSave").addEventListener("click",async()=>{
+ if(!signedInUser||state.profile.role!=="admin")return showToast("Admin pekee.");
+ const title=$("premiumAdminTitle").value.trim()||"Ujumbe",content=$("premiumAdminContent").value.trim(),category=$("premiumAdminCategory").value,collection=$("premiumAdminCollection").value.trim()||category;
+ if(!content)return showToast("Andika ujumbe kwanza.");
+ const values={title,content,category,collection,is_premium:$("premiumAdminIsPremium").checked,is_daily:$("premiumAdminDaily").checked,featured:$("premiumAdminFeatured").checked,created_by:signedInUser.id,status:"published",updated_at:new Date().toISOString()};
+ const q=premiumEditingId?sbClient.from("premium_texts").update(values).eq("id",premiumEditingId):sbClient.from("premium_texts").insert(values);
+ const {error}=await q;if(error)return showToast("Save text: "+error.message);
+ premiumAdminClear();await premiumAdminLoadTexts();await premiumLoad();showToast("Premium text imehifadhiwa.");
+});
+$("premiumAdminCancel").addEventListener("click",premiumAdminClear);
+$("premiumAdminSearch").addEventListener("input",premiumAdminRender);
+$("premiumAdminRefresh").addEventListener("click",premiumAdminLoadTexts);
+$("premiumAdminList").addEventListener("click",async e=>{
+ const card=e.target.closest("[data-premium-admin-id]");if(!card)return;const t=premiumTextsCache.find(x=>x.id===card.dataset.premiumAdminId);if(!t)return;
+ if(e.target.closest("[data-premium-edit]")){premiumEditingId=t.id;$("premiumAdminTitle").value=t.title;$("premiumAdminCategory").value=t.category;$("premiumAdminCollection").value=t.collection;$("premiumAdminContent").value=t.content;$("premiumAdminIsPremium").checked=t.is_premium;$("premiumAdminDaily").checked=t.is_daily;$("premiumAdminFeatured").checked=t.featured;$("premiumAdminSave").textContent="Hifadhi mabadiliko";$("premiumAdminCancel").hidden=false;$("premiumTextsPane")?.scrollIntoView({behavior:"smooth"});}
+ if(e.target.closest("[data-premium-hide]")){const status=e.target.closest("[data-premium-hide]").dataset.premiumHide;const {error}=await sbClient.from("premium_texts").update({status,updated_at:new Date().toISOString()}).eq("id",t.id);if(error)return showToast("Status: "+error.message);await premiumAdminLoadTexts();await premiumLoad();}
+ if(e.target.closest("[data-premium-delete]")){if(!confirm("Futa ujumbe huu kabisa?"))return;const {error}=await sbClient.from("premium_texts").delete().eq("id",t.id);if(error)return showToast("Delete: "+error.message);await premiumAdminLoadTexts();await premiumLoad();}
+});
+document.querySelectorAll('[data-screen="premiumScreen"]').forEach(btn=>btn.addEventListener("click",()=>premiumLoad()));
