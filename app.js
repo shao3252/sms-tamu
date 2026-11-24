@@ -98,27 +98,48 @@ function ensureDefaultGroups(chats) {
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    const profile = { ...defaultProfile, ...(saved.profile || {}), verified: false };
+    const sourcePosts = Array.isArray(saved.posts) ? saved.posts : demoPosts;
+
+    const posts = sourcePosts.map((post, index) => {
+      const category = post.category === "Message Kuu" ? "Ujumbe wa Mapenzi"
+        : (post.category === "Kuwa Msham" ? "Kumtia Moyo" : (post.category || "Ujumbe wa Mapenzi"));
+      const isOwn = post.username === profile.username || post.mine === true;
+
+      return {
+        ...post,
+        id: post.id || (Date.now() + index),
+        name: post.name || profile.name,
+        username: post.username || profile.username,
+        category,
+        format: post.format || "Ujumbe wa kawaida",
+        status: post.status === "removed" ? "removed" : "published",
+        verified: isOwn ? false : Boolean(post.verified),
+        likes: Number.isFinite(post.likes) ? post.likes : 0,
+        liked: Boolean(post.liked),
+        saved: Boolean(post.saved),
+        comments: Array.isArray(post.comments) ? post.comments : [],
+        mine: isOwn
+      };
+    });
 
     return {
-      posts: Array.isArray(saved.posts) ? saved.posts : demoPosts.map(post => ({
-        ...post,
-        comments: [...post.comments]
-      })),
-      profile: { ...defaultProfile, ...(saved.profile || {}), verified: false },
+      posts,
+      profile,
       following: Array.isArray(saved.following) ? saved.following : [...defaultFollowing],
       followers: Array.isArray(saved.followers) ? saved.followers : [...defaultFollowers],
       chats: Array.isArray(saved.chats) ? ensureDefaultGroups(saved.chats) : createDefaultChats(),
-      messages: saved.messages || {},
-      privacy: saved.privacy || "public",
+      messages: saved.messages && typeof saved.messages === "object" ? saved.messages : {},
+      privacy: saved.privacy === "private" ? "private" : "public",
       notifications: saved.notifications !== false
     };
   } catch (error) {
     return {
-      posts: demoPosts,
-      profile: { ...defaultProfile },
+      posts: demoPosts.map(post => ({ ...post, status: "published", comments: Array.isArray(post.comments) ? post.comments : [] })),
+      profile: { ...defaultProfile, verified: false },
       following: [...defaultFollowing],
       followers: [...defaultFollowers],
-      chats: [],
+      chats: createDefaultChats(),
       messages: {},
       privacy: "public",
       notifications: true
@@ -202,7 +223,7 @@ function postCard(post) {
     <p class="post-text">${escapeHTML(post.text)}</p>
       <div class="post-actions">
         <button class="action-button like-button ${post.liked ? "liked" : ""}" data-action="like"><span class="action-icon">${post.liked ? "♥" : "♡"}</span><span>${post.likes}</span></button>
-        <button class="action-button" data-action="comment"><span class="action-icon">☏</span><span>${post.comments.length}</span></button>
+        <button class="action-button" data-action="comment"><span class="action-icon">☏</span><span>${(post.comments || []).length}</span></button>
         <button class="action-button" data-action="copy"><span class="action-icon">▤</span><span>Copy</span></button>
         <button class="action-button" data-action="share"><span class="action-icon">🚀</span><span>Share</span></button>
         <button class="action-button ${post.saved ? "liked" : ""}" data-action="save"><span class="action-icon">${post.saved ? "★" : "☆"}</span><span>Save</span></button>
