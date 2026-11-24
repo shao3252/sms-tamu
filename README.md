@@ -37,6 +37,13 @@ where id = (select id from auth.users where email = 'YOUR_ACCOUNT_EMAIL');
 
 Sign out and sign in again. Admin Dashboard will appear in Settings.
 
+## Admin Dashboard
+The first registered account has been promoted to the initial Admin. After signing out and back in, open Settings → Admin Dashboard.
+
+Dashboard includes user totals, verified/Premium/Admin counts, user search and status filters, verification toggle, Premium grant/removal, and Admin role changes. Admin role changes require confirmation; the current admin account's own role button is disabled to help avoid accidental lockout.
+
+Admin and Premium are separate permissions. Verification, Premium expiry, and role are managed from the dashboard.
+
 ## Premium
 Premium is separate from Admin and uses `premium_until`. Admin can grant 30 days or remove Premium.
 
