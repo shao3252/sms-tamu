@@ -232,6 +232,7 @@ function postCard(post) {
           <div class="author-name">
             ${escapeHTML(post.name)}
             ${post.verified ? '<span class="verified-badge small-verified">✓</span>' : ""}
+            ${post.premium ? '<span class="premium-badge small-premium">PREMIUM</span>' : ""}
           </div>
           <div class="post-time">${escapeHTML(post.time || "Sasa")} <span class="post-tag">${escapeHTML(post.category || "Ujumbe")}</span> ${post.format ? '<span class="post-tag format-tag">' + escapeHTML(post.format) + '</span>' : ""}</div>
         </div>
@@ -285,6 +286,7 @@ function renderProfile() {
   $("profileUsername").textContent = "@" + (profile.username || "user");
   $("profileBio").textContent = profile.bio || "Karibu SMS TAMU.";
   $("profileVerified").hidden = !profile.verified;
+  $("profilePremium").hidden = !(profile.premiumUntil && new Date(profile.premiumUntil) > new Date());
   $("profileAvatar").innerHTML = profile.avatar
     ? '<img src="' + escapeHTML(profile.avatar) + '" alt="Picha ya wasifu">'
     : escapeHTML((profile.name || "U").charAt(0).toUpperCase());
@@ -844,7 +846,7 @@ function updateAuthMode() {
 async function loadCloudPosts() {
   if (!sbClient || !signedInUser) return;
   const { data, error } = await sbClient.from("posts")
-    .select("id,user_id,content,category,format,status,created_at,profiles(display_name,username,verified,avatar_url)")
+    .select("id,user_id,content,category,format,status,created_at,profiles(display_name,username,verified,avatar_url,premium_until)")
     .eq("status","published").order("created_at",{ascending:false}).limit(100);
   if (error) { showToast("Feed error: " + error.message); return; }
   const ids = (data || []).map(p => p.id);
@@ -864,6 +866,7 @@ async function loadCloudPosts() {
     });
     return { id:p.id,userId:p.user_id,name:profile.display_name || profile.username || "Mtumiaji",
       username:profile.username || "user",avatar:profile.avatar_url || "",verified:!!profile.verified,
+      premium:!!(profile.premium_until && new Date(profile.premium_until)>new Date()),
       category:p.category,format:p.format,text:p.content,status:p.status,
       time:new Date(p.created_at).toLocaleDateString("sw-TZ"),likes:postLikes.length,
       liked:postLikes.some(x=>x.user_id===signedInUser.id),saved:false,comments:postComments,
