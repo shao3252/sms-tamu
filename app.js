@@ -817,3 +817,166 @@ $("pinnedBanner").addEventListener("click", () => {
 renderHome();
 renderChats();
 renderProfile();
+
+
+// Supabase authentication + database-backed feed/admin.
+const smsConfig = window.SMS_TAMU_SUPABASE;
+const sbClient = window.supabase && smsConfig ? window.supabase.createClient(smsConfig.url, smsConfig.publishableKey) : null;
+let signedInUser = null;
+let signedInProfile = null;
+let authMode = "login";
+
+function authNotice(message, error) {
+  $("authNotice").textContent = message || "";
+  $("authNotice").classList.toggle("error", !!error);
+}
+function updateAuthMode() {
+  const signup = authMode === "signup";
+  $("authTitle").textContent = signup ? "Tengeneza akaunti" : "Ingia kwenye akaunti";
+  $("authNameWrap").hidden = !signup;
+  $("authDisplayName").required = signup;
+  $("authSubmit").textContent = signup ? "Jisajili" : "Ingia";
+  $("authSwitchText").textContent = signup ? "Una akaunti tayari?" : "Huna akaunti?";
+  $("authSwitch").textContent = signup ? "Ingia" : "Jisajili";
+  $("authForgot").hidden = signup;
+  authNotice("");
+}
+async function loadCloudPosts() {
+  if (!sbClient || !signedInUser) return;
+  const { data, error } = await sbClient.from("posts")
+    .select("id,user_id,content,category,format,status,created_at,profiles(display_name,username,verified,avatar_url)")
+    .eq("status","published").order("created_at",{ascending:false}).limit(100);
+  if (error) { showToast("Feed error: " + error.message); return; }
+  const ids = (data || []).map(p => p.id);
+  let likes = [], comments = [];
+  if (ids.length) {
+    const l = await sbClient.from("post_likes").select("post_id,user_id").in("post_id",ids);
+    if (!l.error) likes = l.data || [];
+    const c = await sbClient.from("comments").select("id,post_id,user_id,content,profiles(display_name,username)").in("post_id",ids);
+    if (!c.error) comments = c.data || [];
+  }
+  state.posts = (data || []).map(p => {
+    const profile = Array.isArray(p.profiles) ? p.profiles[0] : (p.profiles || {});
+    const postLikes = likes.filter(x => x.post_id === p.id);
+    const postComments = comments.filter(x => x.post_id === p.id).map(x => {
+      const cp = Array.isArray(x.profiles) ? x.profiles[0] : (x.profiles || {});
+      return { id:x.id, name:cp.display_name || cp.username || "Mtumiaji", text:x.content };
+    });
+    return { id:p.id,userId:p.user_id,name:profile.display_name || profile.username || "Mtumiaji",
+      username:profile.username || "user",avatar:profile.avatar_url || "",verified:!!profile.verified,
+      category:p.category,format:p.format,text:p.content,status:p.status,
+      time:new Date(p.created_at).toLocaleDateString("sw-TZ"),likes:postLikes.length,
+      liked:postLikes.some(x=>x.user_id===signedInUser.id),saved:false,comments:postComments,
+      mine:p.user_id===signedInUser.id };
+  });
+  renderHome(); renderSearch($("searchInput").value); renderProfile();
+}
+async function loadUserProfile() {
+  if (!signedInUser) return;
+  let result = await sbClient.from("profiles").select("id,username,display_name,bio,avatar_url,role,verified,premium_until").eq("id",signedInUser.id).maybeSingle();
+  if (!result.data) {
+    await new Promise(resolve=>setTimeout(resolve,700));
+    result = await sbClient.from("profiles").select("id,username,display_name,bio,avatar_url,role,verified,premium_until").eq("id",signedInUser.id).maybeSingle();
+  }
+  if (result.error || !result.data) { showToast("Profile haijapakiwa: "+(result.error?.message||"jaribu refresh")); return; }
+  signedInProfile = result.data;
+  state.profile = { name:result.data.display_name || "Mtumiaji",username:result.data.username || "user",
+    bio:result.data.bio || "",avatar:result.data.avatar_url || "",verified:!!result.data.verified,
+    role:result.data.role || "user",premiumUntil:result.data.premium_until };
+  $("adminSetting").hidden = state.profile.role !== "admin";
+  if ($("authDialog").open) $("authDialog").close();
+  renderProfile();
+  await loadCloudPosts();
+}
+async function initializeSMSAuth() {
+  if (!sbClient) { $("authDialog").showModal(); authNotice("Supabase haijapakia; hakikisha internet ipo.",true); return; }
+  if (!$("authDialog").open) $("authDialog").showModal();
+  updateAuthMode();
+  const { data } = await sbClient.auth.getSession();
+  if (data.session) { signedInUser=data.session.user; await loadUserProfile(); }
+  sbClient.auth.onAuthStateChange((_event,session)=>{
+    signedInUser=session ? session.user : null;
+    if (signedInUser) setTimeout(loadUserProfile,0);
+    else { signedInProfile=null; $("adminSetting").hidden=true; if (!$("authDialog").open) $("authDialog").showModal(); }
+  });
+}
+$("authSwitch").addEventListener("click",()=>{authMode=authMode==="login"?"signup":"login";updateAuthMode();});
+$("authForm").addEventListener("submit",async event=>{
+  event.preventDefault(); if(!sbClient)return;
+  const email=$("authEmail").value.trim(),password=$("authPassword").value;
+  $("authSubmit").disabled=true; authNotice(authMode==="signup"?"Inatengeneza akaunti...":"Inaingia...");
+  try {
+    if(authMode==="signup"){
+      const {data,error}=await sbClient.auth.signUp({email,password,options:{data:{display_name:$("authDisplayName").value.trim()}}});
+      if(error)throw error;
+      if(!data.session)authNotice("Akaunti imetengenezwa. Angalia email uthibitishe, kisha ingia.");
+      else {signedInUser=data.user;await loadUserProfile();}
+    } else {
+      const {data,error}=await sbClient.auth.signInWithPassword({email,password});
+      if(error)throw error;signedInUser=data.user;await loadUserProfile();
+    }
+  } catch(error){authNotice(error.message||"Imeshindikana kuingia.",true);}
+  finally{$("authSubmit").disabled=false;}
+});
+$("authForgot").addEventListener("click",async()=>{
+  const email=$("authEmail").value.trim();if(!email)return authNotice("Andika email kwanza.",true);
+  const {error}=await sbClient.auth.resetPasswordForEmail(email);
+  authNotice(error?error.message:"Link ya password imetumwa ikiwa email imesajiliwa.",!!error);
+});
+
+async function renderAdminUsers() {
+  if(!signedInUser || state.profile.role!=="admin")return;
+  $("adminUsers").innerHTML='<div class="empty-state">Inapakia users...</div>';
+  const {data,error}=await sbClient.from("profiles").select("id,username,display_name,role,verified,premium_until,created_at").order("created_at",{ascending:false}).limit(100);
+  if(error){$("adminUsers").innerHTML='<div class="empty-state">Error: '+escapeHTML(error.message)+'</div>';return;}
+  $("adminUsers").innerHTML=(data||[]).map(u=>{
+    const prem=u.premium_until&&new Date(u.premium_until)>new Date();
+    return '<article class="admin-user-row" data-user-id="'+escapeHTML(u.id)+'"><div class="admin-user-info"><strong>'+escapeHTML(u.display_name||u.username)+'</strong><small>@'+escapeHTML(u.username)+' · '+escapeHTML(u.role)+'</small><small>'+(u.verified?"Verified":"Not verified")+' · '+(prem?"Premium":"Normal")+'</small></div><div class="admin-user-actions"><button data-admin-action="verify" data-value="'+(!u.verified)+'">'+(u.verified?"Ondoa ✓":"Verify")+'</button><button data-admin-action="premium" data-value="'+(!prem)+'">'+(prem?"Ondoa Premium":"Premium 30d")+'</button><button data-admin-action="role" data-value="'+(u.role==="admin"?"user":"admin")+'">'+(u.role==="admin"?"Make user":"Make admin")+'</button></div></article>';
+  }).join("")||'<div class="empty-state">Hakuna users bado.</div>';
+}
+$("closeAdmin").addEventListener("click",()=>$("adminDialog").close());
+$("adminUsers").addEventListener("click",async event=>{
+  const button=event.target.closest("[data-admin-action]");if(!button||state.profile.role!=="admin")return;
+  const id=button.closest("[data-user-id]").dataset.userId,action=button.dataset.adminAction,value=button.dataset.value;
+  const changes={};
+  if(action==="verify")changes.verified=value==="true";
+  if(action==="premium")changes.premium_until=value==="true"?new Date(Date.now()+30*86400000).toISOString():null;
+  if(action==="role")changes.role=value;
+  const {error}=await sbClient.from("profiles").update(changes).eq("id",id);
+  if(error){showToast("Action imekataliwa: "+error.message);return;}
+  showToast("User amesasishwa.");await renderAdminUsers();if(id===signedInUser.id)await loadUserProfile();
+});
+document.addEventListener("click",async event=>{
+  const admin=event.target.closest('[data-setting="admin"]');
+  if(admin&&state.profile.role==="admin"){event.preventDefault();event.stopImmediatePropagation();$("settingsDialog").close();$("adminDialog").showModal();await renderAdminUsers();}
+},true);
+document.addEventListener("click",async event=>{
+  const logout=event.target.closest('[data-setting="logout"]');
+  if(!logout||!sbClient||!signedInUser)return;
+  event.preventDefault();event.stopImmediatePropagation();
+  await sbClient.auth.signOut();signedInUser=null;state=loadState();renderHome();renderProfile();renderChats();
+  $("settingsDialog").close();$("authForm").reset();authMode="login";updateAuthMode();$("authDialog").showModal();
+},true);
+
+// Use the cloud database for post creation and likes, not browser-only demo storage.
+$("postForm").addEventListener("submit",async event=>{
+  event.preventDefault();event.stopImmediatePropagation();
+  if(!signedInUser)return showToast("Ingia kwanza ili kupost.");
+  const content=$("postText").value.trim();if(!content)return;
+  const {error}=await sbClient.from("posts").insert({user_id:signedInUser.id,content,category:$("postCategory").value,format:$("postFormat").value,status:"published"});
+  if(error)return showToast("Posti haijatumwa: "+error.message);
+  $("postText").value="";$("characterCount").textContent="0/700";$("postFormat").value="Ujumbe wa kawaida";
+  await loadCloudPosts();goToScreen("homeScreen");showToast("Posti imechapishwa kwenye feed.");
+},true);
+document.addEventListener("click",async event=>{
+  const button=event.target.closest('[data-action="like"]');if(!button)return;
+  event.preventDefault();event.stopImmediatePropagation();
+  const post=getPostFromElement(button);if(!post||!signedInUser)return;
+  const response=post.liked
+    ? await sbClient.from("post_likes").delete().eq("post_id",post.id).eq("user_id",signedInUser.id)
+    : await sbClient.from("post_likes").insert({post_id:post.id,user_id:signedInUser.id});
+  if(response.error)return showToast("Like error: "+response.error.message);
+  await loadCloudPosts();
+},true);
+
+initializeSMSAuth();
