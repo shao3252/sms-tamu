@@ -284,7 +284,7 @@ function renderProfile() {
   const profile = state.profile || defaultProfile;
   $("profileName").textContent = profile.name || "Mtumiaji";
   $("profileUsername").textContent = "@" + (profile.username || "user");
-  $("profileBio").textContent = profile.bio || "Karibu SMS TAMU.";
+  $("profileBio").textContent = profile.bio || "";
   $("profileVerified").hidden = !profile.verified;
   $("profilePremium").hidden = !(profile.premiumUntil && new Date(profile.premiumUntil) > new Date());
   $("profileAvatar").innerHTML = profile.avatar
