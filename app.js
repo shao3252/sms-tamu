@@ -316,16 +316,7 @@ function renderChats() {
 
 function renderMessages() {
   if (!activeChat) return;
-
-  let messages = state.messages[activeChat.id] || [];
-  if (!messages.length && activeChat.isGroup) {
-    messages = [
-      { name: "SMS TAMU", text: "Karibuni kwenye kundi! Unaweza kushiriki maoni au ushauri wenye heshima.", mine: false, time: "09:00" },
-      { name: "Abby", text: "Habari za leo jamani?", mine: false, time: "09:15" },
-      { name: "Mapenzi", text: "Karibuni wote.", mine: false, time: "09:18" }
-    ];
-  }
-
+  const messages = state.messages[activeChat.id] || [];
   $("chatMessages").innerHTML = messages.length
     ? messages.map(message =>
       '<div class="bubble ' + (message.mine ? "mine" : "") + '">' +
@@ -334,8 +325,7 @@ function renderMessages() {
         '<small>' + escapeHTML(message.time || "Sasa") + '</small>' +
       '</div>'
     ).join("")
-    : '<div class="empty-state">Anza mazungumzo kwa kutuma ujumbe.</div>';
-
+    : '<div class="empty-state">Hakuna ujumbe bado. Chat hii ni demo ya browser hii; haiunganishi users wengine.</div>';
   $("chatMessages").scrollTop = $("chatMessages").scrollHeight;
 }
 
@@ -705,7 +695,7 @@ $("chatList").addEventListener("click", event => {
   if (!activeChat) return;
 
   $("chatUserName").textContent = activeChat.name;
-  $("chatStatus").textContent = activeChat.topic || (activeChat.isGroup ? "Kundi la SMS TAMU" : "Mazungumzo ya demo");
+  $("chatStatus").textContent = "Demo ya kifaa hiki";
   $("chatAvatar").textContent = activeChat.isGroup ? "👥" : activeChat.name.charAt(0).toUpperCase();
   $("groupSettingsButton").hidden = !activeChat.isGroup;
   $("pinnedBanner").hidden = !activeChat.isGroup;
@@ -726,6 +716,7 @@ $("chatForm").addEventListener("submit", event => {
   state.messages[activeChat.id] = state.messages[activeChat.id] || [];
   state.messages[activeChat.id].push({
     text,
+    name: state.profile.name,
     mine: true,
     time: new Date().toLocaleTimeString("sw-TZ", { hour: "2-digit", minute: "2-digit" })
   });
@@ -735,7 +726,7 @@ $("chatForm").addEventListener("submit", event => {
   input.value = "";
   renderMessages();
   renderChats();
-  showToast("Ujumbe umehifadhiwa kwenye demo hii.");
+  showToast("Ujumbe umehifadhiwa kwenye browser hii tu.");
 });
 
 
