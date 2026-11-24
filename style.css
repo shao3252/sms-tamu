@@ -773,3 +773,14 @@ button {
 .profile-card{padding:14px 16px 17px}.profile-identity{display:flex;align-items:center;gap:15px;text-align:left;margin:4px 0 16px}.profile-identity .profile-avatar-button{flex:0 0 78px;width:78px;height:78px;margin:0}.profile-identity .profile-avatar{width:74px;height:74px;font-size:27px}.profile-identity .camera-badge{width:25px;height:25px;right:-1px;bottom:-1px}.profile-identity-info{min-width:0;flex:1}.profile-name-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.profile-name-line .profile-title{justify-content:flex-start;min-width:0;max-width:100%;margin:0;font-size:20px;line-height:1.25;overflow-wrap:anywhere}.profile-name-line .premium-badge{margin:0;padding:4px 8px;font-size:9px;white-space:nowrap}.profile-username{margin:4px 0 6px!important;font-size:13px!important}.profile-bio{margin:0!important;text-align:left;font-size:13px!important;overflow-wrap:anywhere}.profile-premium-label{display:inline-flex;align-items:center;gap:4px}@media(max-width:360px){.profile-identity{gap:11px}.profile-identity .profile-avatar-button{flex-basis:68px;width:68px;height:68px}.profile-identity .profile-avatar{width:64px;height:64px}.profile-name-line .profile-title{font-size:18px}}
 
 .premium-badge[hidden]{display:none!important}
+
+/* Chat improvements */
+.chat-search{display:flex;align-items:center;gap:9px;margin:0 12px 12px;padding:0 13px;height:44px;border:1px solid #e4e5eb;border-radius:13px;background:#fff;color:#999;font-size:24px}
+.chat-search input{width:100%;border:0;outline:0;background:transparent;font-size:13px;color:var(--text)}
+.message-line{display:flex;flex-direction:column;gap:4px;max-width:100%;align-self:flex-start}
+.message-line.mine{align-self:flex-end;align-items:flex-end}
+.message-reactions{display:flex;gap:4px;flex-wrap:wrap;padding:0 3px}
+.message-reaction{border:1px solid #e7e7ed;background:#fff;border-radius:999px;padding:3px 7px;font-size:12px;line-height:1.2;color:#777}
+.message-reaction.selected{border-color:#f44786;background:#fff0f5;color:#d83e79}
+.message-line .bubble{max-width:min(82vw,560px)}
+.chat-row time{white-space:nowrap}
