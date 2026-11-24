@@ -306,7 +306,7 @@ async function searchLiveUsers(query){
  const target=$("searchUserResults");if(!target)return;const term=(query||"").trim();
  if(!signedInUser||term.length<2){target.innerHTML='<div class="empty-state">'+(signedInUser?'Andika angalau herufi 2.':'Ingia ili kutafuta watumiaji.')+'</div>';return;}
  target.innerHTML='<div class="empty-state">Inatafuta watumiaji...</div>';
- const pattern="%"+term.replace(/[\\%_]/g,"\\\\$&")+"%";
+ const pattern="%"+term.replace(/[\\%_]/g,"\\$&")+"%";
  const [byName,byUser]=await Promise.all([
  sbClient.from("profiles").select("id,username,display_name,avatar_url,verified,premium_until").ilike("display_name",pattern).limit(12),
  sbClient.from("profiles").select("id,username,display_name,avatar_url,verified,premium_until").ilike("username",pattern).limit(12)]);
