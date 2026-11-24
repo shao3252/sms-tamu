@@ -749,48 +749,7 @@ $("editPostForm").addEventListener("submit", event => {
 
 $("closeListDialog").addEventListener("click", () => $("listDialog").close());
 
-$("chatList").addEventListener("click", event => {
-  const row = event.target.closest("[data-chat-id]");
-  if (!row) return;
-
-  activeChat = state.chats.find(chat => chat.id === row.dataset.chatId);
-  if (!activeChat) return;
-
-  $("chatUserName").textContent = activeChat.name;
-  $("chatStatus").textContent = "Demo ya kifaa hiki";
-  $("chatAvatar").textContent = activeChat.isGroup ? iconSVG("users") : activeChat.name.charAt(0).toUpperCase();
-  $("groupSettingsButton").hidden = !activeChat.isGroup;
-  $("pinnedBanner").hidden = !activeChat.isGroup;
-  if (activeChat.isGroup) $("pinnedBanner").innerHTML = iconSVG("pin") + " Pinned: " + escapeHTML(activeChat.pinned || "Gusa kuona");
-  $("chatWindow").hidden = false;
-  renderMessages();
-});
-
 $("backToChats").addEventListener("click", closeChat);
-$("chatForm").addEventListener("submit", event => {
-  event.preventDefault();
-  if (!activeChat) return;
-
-  const input = $("chatMessageInput");
-  const text = input.value.trim();
-  if (!text) return;
-
-  state.messages[activeChat.id] = state.messages[activeChat.id] || [];
-  state.messages[activeChat.id].push({
-    text,
-    name: state.profile.name,
-    mine: true,
-    time: new Date().toLocaleTimeString("sw-TZ", { hour: "2-digit", minute: "2-digit" })
-  });
-
-  activeChat.last = text;
-  saveState();
-  input.value = "";
-  renderMessages();
-  renderChats();
-  showToast("Ujumbe umehifadhiwa kwenye browser hii tu.");
-});
-
 
 $("groupSettingsButton").addEventListener("click", () => {
   if (!activeChat || !activeChat.isGroup) return;
@@ -1328,12 +1287,20 @@ document.addEventListener("click",async event=>{
   const messageButton=event.target.closest("[data-message-user-id]");
   if(messageButton){
     event.preventDefault();event.stopImmediatePropagation();
+    if(!signedInUser||!sbClient){showToast("Ingia kwenye akaunti kwanza ili kuanza chat.");return;}
     const targetId=messageButton.dataset.messageUserId;
+    if(!targetId||targetId===signedInUser.id){showToast("Chagua mtumiaji mwingine kuanzisha chat.");return;}
+    messageButton.disabled=true;
     const {data,error}=await sbClient.rpc("start_direct_chat",{target_user:targetId});
-    if(error){showToast("Chat haijaanzishwa: "+error.message);return;}
-    $("listDialog").close();await loadLiveChats();
-    const chat=state.chats.find(c=>c.id===data);
+    messageButton.disabled=false;
+    if(error){showToast("Chat haijaanzishwa: "+(error.message||"Jaribu tena."));return;}
+    const conversationId=typeof data==="string"?data:(data?.id||data?.conversation_id);
+    if(!conversationId){showToast("Chat haikuundwa. Tafadhali jaribu tena.");return;}
+    if($("listDialog").open)$("listDialog").close();
+    await loadLiveChats();
+    const chat=state.chats.find(c=>String(c.id)===String(conversationId));
     if(chat)await openLiveChat(chat);
+    else showToast("Chat imeanzishwa lakini haijaonekana kwenye orodha. Refresh kisha ujaribu tena.");
     return;
   }
   const follow=event.target.closest("[data-follow]");
