@@ -23,12 +23,17 @@
   </form>
 </dialog>
 <dialog id="adminDialog" class="comments-dialog admin-dialog">
-  <div class="dialog-head"><h2>Admin Dashboard</h2><button class="close-dialog" id="closeAdmin">×</button></div>
-  <p class="admin-subtitle">Dhibiti akaunti, verification, Premium na ruhusa za admin.</p>
-  <div class="admin-stat-grid" id="adminStats"><div class="admin-stat"><small>Users</small><strong>—</strong></div><div class="admin-stat"><small>Verified</small><strong>—</strong></div><div class="admin-stat"><small>Premium</small><strong>—</strong></div><div class="admin-stat"><small>Admins</small><strong>—</strong></div></div>
-  <div class="admin-toolbar"><input id="adminSearch" type="search" placeholder="Tafuta jina au username..." aria-label="Tafuta user"><select id="adminFilter" aria-label="Chuja users"><option value="all">Users wote</option><option value="unverified">Hawajaverify</option><option value="verified">Verified</option><option value="premium">Premium</option><option value="admins">Admins</option><option value="normal">Normal users</option></select><button type="button" id="adminRefresh">Refresh</button></div>
-  <p class="admin-result-count" id="adminResultCount"></p>
-  <div id="adminUsers" class="admin-users"><div class="empty-state">Inapakia users...</div></div>
+  <div class="dialog-head"><div><h2>Admin Control Center</h2><p class="admin-subtitle">Usimamizi wa jamii, akaunti na maudhui.</p></div><button class="close-dialog" id="closeAdmin" aria-label="Funga">×</button></div>
+  <div class="admin-stat-grid" id="adminStats"><div class="admin-stat"><small>Users</small><strong>—</strong></div><div class="admin-stat"><small>Verified</small><strong>—</strong></div><div class="admin-stat"><small>Premium</small><strong>—</strong></div><div class="admin-stat"><small>Admins</small><strong>—</strong></div><div class="admin-stat"><small>Posts</small><strong>—</strong></div><div class="admin-stat"><small>Comments</small><strong>—</strong></div></div>
+  <div class="admin-tabs"><button type="button" class="admin-tab active" data-admin-tab="users">Akaunti</button><button type="button" class="admin-tab" data-admin-tab="posts">Posts & Moderation</button></div>
+  <section class="admin-pane active" id="adminUsersPane">
+    <div class="admin-toolbar"><input id="adminSearch" type="search" placeholder="Tafuta jina au username..." aria-label="Tafuta user"><select id="adminFilter" aria-label="Chuja users"><option value="all">Users wote</option><option value="unverified">Hawajaverify</option><option value="verified">Verified</option><option value="premium">Premium</option><option value="admins">Admins</option><option value="normal">Normal users</option></select><button type="button" id="adminRefresh">Refresh</button></div>
+    <p class="admin-result-count" id="adminResultCount"></p><div id="adminUsers" class="admin-users"><div class="empty-state">Inapakia users...</div></div>
+  </section>
+  <section class="admin-pane" id="adminPostsPane">
+    <div class="admin-toolbar"><input id="adminPostSearch" type="search" placeholder="Tafuta ndani ya post..." aria-label="Tafuta posts"><select id="adminPostFilter" aria-label="Chuja posts"><option value="all">Posts zote</option><option value="published">Zilizo live</option><option value="removed">Zilizofichwa</option></select><button type="button" id="adminPostsRefresh">Refresh</button></div>
+    <p class="admin-result-count" id="adminPostResultCount"></p><div id="adminPosts" class="admin-users"><div class="empty-state">Posts zitapakiwa.</div></div>
+  </section>
 </dialog>
 <main class="app-main">
 <section class="screen active" id="homeScreen">
