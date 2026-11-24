@@ -3,12 +3,15 @@
 }
 
 :root {
-    --background: #090909;
-    --surface: #111111;
-    --border: #292929;
-    --text: #f5f5f5;
-    --muted: #bdbdbd;
-    --gold: #e9b44c;
+    --background: #fff9fb;
+    --surface: #ffffff;
+    --border: #f0dce4;
+    --text: #39343a;
+    --muted: #817780;
+    --pink: #e98caf;
+    --pink-dark: #d96f98;
+    --pink-soft: #fdebf2;
+    --gray-soft: #f6f3f5;
 }
 
 body {
@@ -23,7 +26,8 @@ body {
 
 .site-header {
     padding: 22px 7%;
-    border-bottom: 1px solid #242424;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, .88);
 }
 
 .logo {
@@ -36,7 +40,7 @@ body {
 
 .logo span,
 h1 span {
-    color: var(--gold);
+    color: var(--pink-dark);
 }
 
 .page-main {
@@ -56,7 +60,7 @@ h1 span {
 }
 
 .eyebrow {
-    color: var(--gold);
+    color: var(--pink-dark);
     text-transform: uppercase;
     letter-spacing: 3px;
     font-size: .8rem;
@@ -80,24 +84,28 @@ p {
 .primary-button {
     padding: 14px 28px;
     border: 0;
-    border-radius: 8px;
-    background: var(--gold);
-    color: #111;
+    border-radius: 999px;
+    background: var(--pink);
+    color: #ffffff;
     font: inherit;
     font-weight: 700;
     cursor: pointer;
+    box-shadow: 0 8px 20px rgba(217, 111, 152, .18);
+    transition: background .2s ease, transform .2s ease;
 }
 
 .primary-button:hover {
-    filter: brightness(1.08);
+    background: var(--pink-dark);
+    transform: translateY(-1px);
 }
 
 .auth-card {
     max-width: 420px;
     padding: 30px;
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: 20px;
     background: var(--surface);
+    box-shadow: 0 18px 50px rgba(166, 117, 139, .10);
     text-align: left;
 }
 
@@ -114,23 +122,28 @@ p {
 label {
     display: block;
     margin: 16px 0 8px;
-    color: #dddddd;
+    color: #625960;
     font-size: .9rem;
 }
 
 input {
     width: 100%;
     padding: 13px 14px;
-    border: 1px solid #333333;
-    border-radius: 8px;
+    border: 1px solid #e7dce2;
+    border-radius: 10px;
     outline: none;
-    background: #090909;
-    color: #ffffff;
+    background: #fff;
+    color: var(--text);
     font: inherit;
 }
 
+input::placeholder {
+    color: #b3a8af;
+}
+
 input:focus {
-    border-color: var(--gold);
+    border-color: var(--pink);
+    box-shadow: 0 0 0 3px var(--pink-soft);
 }
 
 .full-width {
@@ -148,26 +161,28 @@ input:focus {
     margin: 16px auto 0;
     border: 0;
     background: none;
-    color: #d0d0d0;
+    color: var(--pink-dark);
     font: inherit;
     cursor: pointer;
 }
 
 .back-button {
     margin-top: 20px;
+    color: #8a7f86;
 }
 
 .notice {
     margin: 14px 0 0;
-    color: var(--gold);
+    color: var(--pink-dark);
     font-size: .9rem;
     text-align: center;
 }
 
 .site-footer {
     padding: 20px;
-    border-top: 1px solid #242424;
-    color: #777777;
+    border-top: 1px solid var(--border);
+    background: #ffffff;
+    color: #a0959c;
     font-size: .85rem;
     text-align: center;
 }
