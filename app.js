@@ -1153,6 +1153,15 @@ function startLiveSubscriptions() {
     .on("postgres_changes",{event:"*",schema:"public",table:"comments"},()=>loadCloudPosts())
     .on("postgres_changes",{event:"*",schema:"public",table:"post_likes"},()=>loadCloudPosts())
     .on("postgres_changes",{event:"*",schema:"public",table:"follows"},()=>loadLiveSocial())
+    .on("postgres_changes",{event:"*",schema:"public",table:"profiles"},payload=>{
+      const p=payload.new;
+      if(p&&p.id===signedInUser.id){
+        state.profile={...state.profile,name:p.display_name||state.profile.name,username:p.username||state.profile.username,
+          bio:p.bio||"",avatar:p.avatar_url||"",verified:!!p.verified,role:p.role||"user",
+          premiumUntil:p.premium_until,privacy:p.is_private?"private":"public",notifications:p.notifications_enabled!==false};
+        $("adminSetting").hidden=state.profile.role!=="admin";renderProfile();
+      }else loadCloudPosts();
+    })
     .on("postgres_changes",{event:"*",schema:"public",table:"messages"},payload=>{
       const conversationId=payload.new?.conversation_id||payload.old?.conversation_id;
       if(activeChat&&activeChat.id===conversationId)loadLiveMessages(conversationId);
