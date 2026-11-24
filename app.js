@@ -79,6 +79,22 @@ const defaultFollowers = [
   { id: "ally", name: "Ally", username: "ally" }
 ];
 
+function createDefaultChats() {
+  return [
+    { id: "sms-tamu-group", name: "SMS TAMU GROUP", isGroup: true, topic: "Tupo Online", last: "Karibu kwenye SMS TAMU GROUP", pinned: "Karibu SMS TAMU GROUP! Tumia kundi kwa maoni na ushauri wenye heshima.", muted: false },
+    { id: "global-group", name: "Global Group", isGroup: true, topic: "Tupo Online", last: "Karibu Global Group", pinned: "Karibu Global Group. Shiriki mawazo mazuri na ujumbe wenye heshima.", muted: false },
+    { id: "veeamor", name: "VeeAmor", last: "Ujumbe wako umenigusa." },
+    { id: "shauku", name: "Shauku", last: "Habari yako?" },
+    { id: "ally", name: "Ally", last: "Asante sana." }
+  ];
+}
+
+function ensureDefaultGroups(chats) {
+  const groups = createDefaultChats().filter(chat => chat.isGroup);
+  const existing = new Set(chats.map(chat => chat.id));
+  return [...groups.filter(group => !existing.has(group.id)), ...chats];
+}
+
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
@@ -91,11 +107,7 @@ function loadState() {
       profile: { ...defaultProfile, ...(saved.profile || {}) },
       following: Array.isArray(saved.following) ? saved.following : [...defaultFollowing],
       followers: Array.isArray(saved.followers) ? saved.followers : [...defaultFollowers],
-      chats: saved.chats || [
-        { id: "veeamor", name: "VeeAmor", last: "Ujumbe wako umenigusa." },
-        { id: "shauku", name: "Shauku", last: "Habari yako?" },
-        { id: "ally", name: "Ally", last: "Asante sana." }
-      ],
+      chats: Array.isArray(saved.chats) ? ensureDefaultGroups(saved.chats) : createDefaultChats(),
       messages: saved.messages || {},
       privacy: saved.privacy || "public",
       notifications: saved.notifications !== false
@@ -301,25 +313,35 @@ function openEditPost(post) {
 }
 
 function renderChats() {
-  $("chatList").innerHTML = state.chats.map(chat => `
-    <button class="chat-row" data-chat-id="${escapeHTML(chat.id)}">
-      <span class="avatar pink">${escapeHTML(chat.name.charAt(0).toUpperCase())}</span>
-      <span class="chat-preview"><strong>${escapeHTML(chat.name)}</strong><p>${escapeHTML(chat.last || "Anza mazungumzo")}</p></span>
-      <time>Karibuni</time>
-    </button>`).join("")
-    || '<div class="empty-state">Bado huna mazungumzo.</div>';
+  $("chatList").innerHTML = state.chats.map(chat =>
+    '<button class="chat-row" data-chat-id="' + escapeHTML(chat.id) + '">' +
+      '<span class="avatar pink">' + (chat.isGroup ? "👥" : escapeHTML(chat.name.charAt(0).toUpperCase())) + '</span>' +
+      '<span class="chat-preview"><strong>' + escapeHTML(chat.name) + '</strong><p>' + escapeHTML(chat.last || "Anza mazungumzo") + '</p></span>' +
+      '<time>' + (chat.isGroup ? "Kundi" : "DM") + '</time>' +
+    '</button>'
+  ).join("") || '<div class="empty-state">Bado huna mazungumzo.</div>';
 }
 
 function renderMessages() {
   if (!activeChat) return;
 
-  const messages = state.messages[activeChat.id] || [];
+  let messages = state.messages[activeChat.id] || [];
+  if (!messages.length && activeChat.isGroup) {
+    messages = [
+      { name: "SMS TAMU", text: "Karibuni kwenye kundi! Unaweza kushiriki maoni au ushauri wenye heshima.", mine: false, time: "09:00" },
+      { name: "Abby", text: "Habari za leo jamani?", mine: false, time: "09:15" },
+      { name: "Mapenzi", text: "Karibuni wote.", mine: false, time: "09:18" }
+    ];
+  }
+
   $("chatMessages").innerHTML = messages.length
-    ? messages.map(message => `
-      <div class="bubble ${message.mine ? "mine" : ""}">
-        ${escapeHTML(message.text)}
-        <small>${escapeHTML(message.time || "Sasa")}</small>
-      </div>`).join("")
+    ? messages.map(message =>
+      '<div class="bubble ' + (message.mine ? "mine" : "") + '">' +
+        (message.name && !message.mine ? '<strong class="bubble-name">' + escapeHTML(message.name) + '</strong>' : "") +
+        escapeHTML(message.text) +
+        '<small>' + escapeHTML(message.time || "Sasa") + '</small>' +
+      '</div>'
+    ).join("")
     : '<div class="empty-state">Anza mazungumzo kwa kutuma ujumbe.</div>';
 
   $("chatMessages").scrollTop = $("chatMessages").scrollHeight;
@@ -679,6 +701,11 @@ $("chatList").addEventListener("click", event => {
   if (!activeChat) return;
 
   $("chatUserName").textContent = activeChat.name;
+  $("chatStatus").textContent = activeChat.topic || (activeChat.isGroup ? "Kundi la SMS TAMU" : "Mazungumzo ya demo");
+  $("chatAvatar").textContent = activeChat.isGroup ? "👥" : activeChat.name.charAt(0).toUpperCase();
+  $("groupSettingsButton").hidden = !activeChat.isGroup;
+  $("pinnedBanner").hidden = !activeChat.isGroup;
+  if (activeChat.isGroup) $("pinnedBanner").textContent = "📌 Pinned: " + (activeChat.pinned || "Gusa kuona");
   $("chatWindow").hidden = false;
   renderMessages();
 });
@@ -705,6 +732,55 @@ $("chatForm").addEventListener("submit", event => {
   renderMessages();
   renderChats();
   showToast("Ujumbe umehifadhiwa kwenye demo hii.");
+});
+
+
+$("groupSettingsButton").addEventListener("click", () => {
+  if (!activeChat || !activeChat.isGroup) return;
+  $("groupNameInput").value = activeChat.name;
+  $("groupTopicInput").value = activeChat.topic || "";
+  $("groupMuteInput").checked = Boolean(activeChat.muted);
+  $("groupSettingsDialog").showModal();
+});
+
+$("closeGroupSettings").addEventListener("click", () => $("groupSettingsDialog").close());
+
+$("groupSettingsForm").addEventListener("submit", event => {
+  event.preventDefault();
+  if (!activeChat || !activeChat.isGroup) return;
+  const name = $("groupNameInput").value.trim();
+  if (!name) return;
+
+  activeChat.name = name;
+  activeChat.topic = $("groupTopicInput").value.trim() || "Kundi la SMS TAMU";
+  activeChat.muted = $("groupMuteInput").checked;
+  saveState();
+  $("chatUserName").textContent = activeChat.name;
+  $("chatStatus").textContent = activeChat.topic;
+  renderChats();
+  $("groupSettingsDialog").close();
+  showToast("Mipangilio ya kundi imehifadhiwa kwenye demo.");
+});
+
+$("leaveGroupButton").addEventListener("click", () => {
+  if (!activeChat || !activeChat.isGroup) return;
+  if (!confirm("Una uhakika unataka kuondoka kwenye kundi hili?")) return;
+
+  const groupId = activeChat.id;
+  state.chats = state.chats.filter(chat => chat.id !== groupId);
+  delete state.messages[groupId];
+  saveState();
+  $("groupSettingsDialog").close();
+  closeChat();
+  renderChats();
+  showToast("Umeondoka kwenye kundi la demo.");
+});
+
+$("pinnedBanner").addEventListener("click", () => {
+  if (!activeChat || !activeChat.isGroup) return;
+  $("listDialogTitle").textContent = "Ujumbe uliopiniwa";
+  $("listDialogContent").innerHTML = '<div class="comment-item">' + escapeHTML(activeChat.pinned || "Hakuna pinned message.") + '</div>';
+  $("listDialog").showModal();
 });
 
 // Initial render
