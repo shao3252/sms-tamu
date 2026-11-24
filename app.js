@@ -116,7 +116,7 @@ function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     const profile = { ...defaultProfile, ...(saved.profile || {}), verified: false };
-    const sourcePosts = Array.isArray(saved.posts) ? saved.posts : demoPosts;
+    const sourcePosts = Array.isArray(saved.posts) ? saved.posts : [];
 
     const posts = sourcePosts.map((post, index) => {
       const category = post.category === "Message Kuu" ? "Ujumbe wa Mapenzi"
@@ -143,20 +143,20 @@ function loadState() {
     return {
       posts,
       profile,
-      following: Array.isArray(saved.following) ? saved.following : [...defaultFollowing],
-      followers: Array.isArray(saved.followers) ? saved.followers : [...defaultFollowers],
-      chats: Array.isArray(saved.chats) ? ensureDefaultGroups(saved.chats) : createDefaultChats(),
+      following: Array.isArray(saved.following) ? saved.following : [],
+      followers: Array.isArray(saved.followers) ? saved.followers : [],
+      chats: Array.isArray(saved.chats) ? saved.chats : [],
       messages: saved.messages && typeof saved.messages === "object" ? saved.messages : {},
       privacy: saved.privacy === "private" ? "private" : "public",
       notifications: saved.notifications !== false
     };
   } catch (error) {
     return {
-      posts: demoPosts.map(post => ({ ...post, status: "published", comments: Array.isArray(post.comments) ? post.comments : [] })),
+      posts: [],
       profile: { ...defaultProfile, verified: false },
-      following: [...defaultFollowing],
-      followers: [...defaultFollowers],
-      chats: createDefaultChats(),
+      following: [],
+      followers: [],
+      chats: [],
       messages: {},
       privacy: "public",
       notifications: true
@@ -928,6 +928,7 @@ $("authForgot").addEventListener("click",async()=>{
 });
 
 let adminUsersCache=[];
+let adminPostsCache=[];
 function adminUserIsPremium(user){return !!(user.premium_until&&new Date(user.premium_until)>new Date());}
 function filterAdminUsers(){
  const search=($("adminSearch")?.value||"").trim().toLowerCase(),filter=$("adminFilter")?.value||"all";
@@ -953,13 +954,51 @@ async function renderAdminUsers(){
  if(error){$("adminUsers").innerHTML='<div class="empty-state">Imeshindwa kupakia: '+escapeHTML(error.message)+'</div>';return;}
  adminUsersCache=data||[];
  const verified=adminUsersCache.filter(u=>u.verified).length,premium=adminUsersCache.filter(adminUserIsPremium).length,admins=adminUsersCache.filter(u=>u.role==="admin").length;
- $("adminStats").innerHTML='<div class="admin-stat"><small>Jumla ya users</small><strong>'+adminUsersCache.length+'</strong></div><div class="admin-stat"><small>Verified</small><strong>'+verified+'</strong></div><div class="admin-stat"><small>Premium active</small><strong>'+premium+'</strong></div><div class="admin-stat"><small>Admins</small><strong>'+admins+'</strong></div>';
+ const [postsCount,commentsCount]=await Promise.all([
+  sbClient.from("posts").select("id",{count:"exact",head:true}),
+  sbClient.from("comments").select("id",{count:"exact",head:true})
+ ]);
+ $("adminStats").innerHTML='<div class="admin-stat"><small>Users</small><strong>'+adminUsersCache.length+'</strong></div><div class="admin-stat"><small>Verified</small><strong>'+verified+'</strong></div><div class="admin-stat"><small>Premium active</small><strong>'+premium+'</strong></div><div class="admin-stat"><small>Admins</small><strong>'+admins+'</strong></div><div class="admin-stat"><small>Posts</small><strong>'+(postsCount.count??"—")+'</strong></div><div class="admin-stat"><small>Comments</small><strong>'+(commentsCount.count??"—")+'</strong></div>';
  renderAdminRows();
+}
+async function renderAdminPosts(){
+ if(!signedInUser||state.profile.role!=="admin")return;
+ $("adminPosts").innerHTML='<div class="empty-state">Inapakia posts...</div>';
+ const {data,error}=await sbClient.from("posts").select("id,user_id,content,category,status,created_at,profiles(display_name,username)").order("created_at",{ascending:false}).limit(500);
+ if(error){$("adminPosts").innerHTML='<div class="empty-state">Posts hazijapakiwa: '+escapeHTML(error.message)+'</div>';return;}
+ adminPostsCache=data||[];
+ const term=($("adminPostSearch").value||"").trim().toLowerCase(),filter=$("adminPostFilter").value;
+ const rows=adminPostsCache.filter(p=>{
+  const pr=Array.isArray(p.profiles)?p.profiles[0]:(p.profiles||{});
+  return (filter==="all"||p.status===filter)&&((p.content||"").toLowerCase().includes(term)||(pr.display_name||"").toLowerCase().includes(term)||(pr.username||"").toLowerCase().includes(term));
+ });
+ $("adminPostResultCount").textContent="Inaonyesha "+rows.length+" kati ya "+adminPostsCache.length+" posts";
+ $("adminPosts").innerHTML=rows.map(p=>{
+  const pr=Array.isArray(p.profiles)?p.profiles[0]:(p.profiles||{});
+  const hidden=p.status==="removed";
+  return '<article class="admin-post-row" data-admin-post-id="'+escapeHTML(p.id)+'"><div class="admin-post-meta"><strong>'+escapeHTML(pr.display_name||pr.username||"Mtumiaji")+' <small>@'+escapeHTML(pr.username||"user")+'</small></strong><span class="admin-post-status '+(hidden?'is-hidden':'')+'">'+(hidden?'Hidden':'Live')+' · '+escapeHTML(p.category||"Post")+' · '+escapeHTML(new Date(p.created_at).toLocaleDateString("sw-TZ"))+'</span><p>'+escapeHTML(p.content)+'</p></div><div class="admin-post-actions"><button data-post-moderate="'+(hidden?'published':'removed')+'">'+(hidden?'Rejesha post':'Ficha post')+'</button><button class="danger" data-post-delete="true">Futa kabisa</button></div></article>';
+ }).join("")||'<div class="empty-state">Hakuna post inayolingana na utafutaji.</div>';
 }
 $("adminSearch").addEventListener("input",renderAdminRows);
 $("adminFilter").addEventListener("change",renderAdminRows);
-$("adminRefresh").addEventListener("click",renderAdminUsers);
+$("adminRefresh").addEventListener("click",renderAdminUsers);\n$("adminPostSearch").addEventListener("input",renderAdminPosts);\n$("adminPostFilter").addEventListener("change",renderAdminPosts);\n$("adminPostsRefresh").addEventListener("click",renderAdminPosts);\ndocument.querySelectorAll("[data-admin-tab]").forEach(tab=>tab.addEventListener("click",()=>{document.querySelectorAll("[data-admin-tab]").forEach(x=>x.classList.toggle("active",x===tab));$("adminUsersPane").classList.toggle("active",tab.dataset.adminTab==="users");$("adminPostsPane").classList.toggle("active",tab.dataset.adminTab==="posts");if(tab.dataset.adminTab==="posts")renderAdminPosts();}));
 $("closeAdmin").addEventListener("click",()=>$("adminDialog").close());
+$("adminPosts").addEventListener("click",async event=>{
+ const button=event.target.closest("[data-post-moderate],[data-post-delete]");if(!button||state.profile.role!=="admin")return;
+ const id=button.closest("[data-admin-post-id]").dataset.adminPostId;
+ if(button.dataset.postDelete){
+  if(!confirm("Futa kabisa post hii? Hili haliwezi kurudishwa."))return;
+  const {error}=await sbClient.from("posts").delete().eq("id",id);
+  if(error)return showToast("Post haijafutwa: "+error.message);
+  showToast("Post imefutwa kabisa.");
+ }else{
+  const status=button.dataset.postModerate;
+  const {error}=await sbClient.from("posts").update({status}).eq("id",id);
+  if(error)return showToast("Moderation: "+error.message);
+  showToast(status==="removed"?"Post imefichwa kutoka feed.":"Post imerudishwa live.");
+ }
+ await renderAdminPosts();await loadCloudPosts();
+});
 $("adminUsers").addEventListener("click",async event=>{
  const button=event.target.closest("[data-admin-action]");
  if(!button||state.profile.role!=="admin"||button.disabled)return;
@@ -984,7 +1023,7 @@ $("adminUsers").addEventListener("click",async event=>{
 });
 document.addEventListener("click",async event=>{
   const admin=event.target.closest('[data-setting="admin"]');
-  if(admin&&state.profile.role==="admin"){event.preventDefault();event.stopImmediatePropagation();$("settingsDialog").close();$("adminDialog").showModal();await renderAdminUsers();}
+  if(admin&&state.profile.role==="admin"){event.preventDefault();event.stopImmediatePropagation();$("settingsDialog").close();$("adminDialog").showModal();await renderAdminUsers();await renderAdminPosts();}
 },true);
 document.addEventListener("click",async event=>{
   const logout=event.target.closest('[data-setting="logout"]');
