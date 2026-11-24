@@ -34,7 +34,7 @@ const demoPosts = [
     name: "Shaolin",
     username: "shaolin",
     verified: true,
-    category: "Message Kuu",
+    category: "Ujumbe wa Mapenzi",
     text: "Kitu ninachokipenda zaidi ni kusikia sauti yako na kuona furaha yako. Natamani kila siku nikukumbushe jinsi ulivyo wa thamani kwangu.",
     likes: 3,
     liked: false,
@@ -62,7 +62,7 @@ const defaultProfile = {
   username: "shaolin",
   bio: "Everyone is Unique.",
   avatar: "",
-  verified: true
+  verified: false
 };
 
 const defaultFollowing = [
@@ -104,7 +104,7 @@ function loadState() {
         ...post,
         comments: [...post.comments]
       })),
-      profile: { ...defaultProfile, ...(saved.profile || {}) },
+      profile: { ...defaultProfile, ...(saved.profile || {}), verified: false },
       following: Array.isArray(saved.following) ? saved.following : [...defaultFollowing],
       followers: Array.isArray(saved.followers) ? saved.followers : [...defaultFollowers],
       chats: Array.isArray(saved.chats) ? ensureDefaultGroups(saved.chats) : createDefaultChats(),
