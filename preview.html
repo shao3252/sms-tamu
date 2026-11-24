@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS TAMU | Preview</title>
+    <link rel="stylesheet" href="css/preview.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="logo" href="preview.html">SMS <span>TAMU</span></a>
+    </header>
+
+    <main class="page-main">
+        <section class="welcome content-panel" id="welcomeSection">
+            <div class="eyebrow">Karibu kwenye SMS TAMU</div>
+            <h1>Maneno mazuri,<br><span>hisia za kweli.</span></h1>
+            <p>Pata ujumbe mtamu wa kuonyesha upendo, kujali na kuthamini watu muhimu katika maisha yako.</p>
+            <button class="primary-button" id="welcomeButton" type="button">Karibu</button>
+        </section>
+
+        <section class="auth-card content-panel" id="loginSection" aria-labelledby="loginTitle" hidden>
+            <div class="eyebrow">SMS TAMU</div>
+            <h2 id="loginTitle">Log in</h2>
+            <p class="intro">Ingia kwenye akaunti yako kuendelea.</p>
+            <form id="loginForm">
+                <label for="loginId">Email, username au namba ya simu</label>
+                <input id="loginId" name="loginId" type="text" placeholder="Email, username au simu" autocomplete="username" required>
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" placeholder="Andika password yako" autocomplete="current-password" required>
+                <button class="primary-button full-width" type="submit">Log in</button>
+                <button class="text-button full-width" id="forgotButton" type="button">Forgot password?</button>
+                <p class="notice" id="loginNotice" role="status" hidden></p>
+            </form>
+            <button class="back-button" id="backButton" type="button">← Rudi nyuma</button>
+        </section>
+
+        <section class="auth-card content-panel" id="forgotSection" aria-labelledby="forgotTitle" hidden>
+            <div class="eyebrow">SMS TAMU</div>
+            <h2 id="forgotTitle">Forgot password?</h2>
+            <p class="intro">Weka email au namba ya simu uliyoitumia. Mfumo wa kurejesha password utaunganishwa na database baadaye.</p>
+            <form id="forgotForm">
+                <label for="recoveryId">Email au namba ya simu</label>
+                <input id="recoveryId" name="recoveryId" type="text" placeholder="Email au namba ya simu" required>
+                <button class="primary-button full-width" type="submit">Endelea</button>
+                <p class="notice" id="forgotNotice" role="status" hidden></p>
+            </form>
+            <button class="back-button" id="forgotBackButton" type="button">← Rudi kwenye Log in</button>
+        </section>
+    </main>
+
+    <footer class="site-footer">© <span id="year"></span> SMS TAMU. Haki zote zimehifadhiwa.</footer>
+    <script src="js/preview.js"></script>
+</body>
+</html>
