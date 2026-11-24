@@ -54,6 +54,13 @@
 <dialog id="editPostDialog" class="comments-dialog"><div class="dialog-head"><h2>Hariri Posti</h2><button class="close-dialog" id="closeEditPost">×</button></div><form id="editPostForm" class="profile-form"><label for="editPostCategory">Aina ya ujumbe</label><select id="editPostCategory"><option>Ujumbe wa Mapenzi</option><option>Kuomba Msamaha</option><option>Kusifia</option><option>Kumtia Moyo</option><option>Ushauri</option></select><label for="editPostFormat">Aina ya maandishi</label><select id="editPostFormat"><option value="Ujumbe wa kawaida">Ujumbe wa kawaida</option><option value="Caption fupi">Caption fupi</option><option value="Shairi">Shairi</option><option value="Status">Status</option></select><label for="editPostText">Ujumbe</label><textarea id="editPostText" rows="6" maxlength="700" required></textarea><button class="primary-button">Hifadhi Posti</button></form></dialog>
 <dialog id="listDialog" class="comments-dialog"><div class="dialog-head"><h2 id="listDialogTitle">Watu</h2><button class="close-dialog" id="closeListDialog">×</button></div><div id="listDialogContent"></div></dialog>
 <dialog id="groupSettingsDialog" class="comments-dialog"><div class="dialog-head"><h2>Mipangilio ya kundi</h2><button class="close-dialog" id="closeGroupSettings">×</button></div><form id="groupSettingsForm" class="profile-form"><label for="groupNameInput">Jina la kundi</label><input id="groupNameInput" maxlength="50" required><label for="groupTopicInput">Maelezo ya kundi</label><textarea id="groupTopicInput" rows="3" maxlength="180"></textarea><label class="setting-choice"><input type="checkbox" id="groupMuteInput"> Nyamazisha arifa za kundi (demo)</label><button class="primary-button">Hifadhi Mipangilio</button><button type="button" class="outline-button" id="leaveGroupButton">Ondoka kwenye kundi</button></form></dialog>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  window.SMS_TAMU_SUPABASE = {
+    url: "https://qtsanhytungskipatyqc.supabase.co",
+    publishableKey: "sb_publishable_bd2shs_4S0lYw-XvKwsllw_PcAcMgzg"
+  };
+</script>
 <script src="app.js"></script>
 </body>
 </html>
