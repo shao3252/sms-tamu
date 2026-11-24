@@ -1518,3 +1518,4 @@ $("premiumAdminList").addEventListener("click",async e=>{
  if(e.target.closest("[data-premium-delete]")){if(!confirm("Futa ujumbe huu kabisa?"))return;const {error}=await sbClient.from("premium_texts").delete().eq("id",t.id);if(error)return showToast("Delete: "+error.message);await premiumAdminLoadTexts();await premiumLoad();}
 });
 document.querySelectorAll('[data-screen="premiumScreen"]').forEach(btn=>btn.addEventListener("click",()=>premiumLoad()));
+document.querySelector(".premium-profile-link")?.addEventListener("click",()=>{goToScreen("premiumScreen");premiumLoad();});
