@@ -927,27 +927,60 @@ $("authForgot").addEventListener("click",async()=>{
   authNotice(error?error.message:"Link ya password imetumwa ikiwa email imesajiliwa.",!!error);
 });
 
-async function renderAdminUsers() {
-  if(!signedInUser || state.profile.role!=="admin")return;
-  $("adminUsers").innerHTML='<div class="empty-state">Inapakia users...</div>';
-  const {data,error}=await sbClient.from("profiles").select("id,username,display_name,role,verified,premium_until,created_at").order("created_at",{ascending:false}).limit(100);
-  if(error){$("adminUsers").innerHTML='<div class="empty-state">Error: '+escapeHTML(error.message)+'</div>';return;}
-  $("adminUsers").innerHTML=(data||[]).map(u=>{
-    const prem=u.premium_until&&new Date(u.premium_until)>new Date();
-    return '<article class="admin-user-row" data-user-id="'+escapeHTML(u.id)+'"><div class="admin-user-info"><strong>'+escapeHTML(u.display_name||u.username)+'</strong><small>@'+escapeHTML(u.username)+' · '+escapeHTML(u.role)+'</small><small>'+(u.verified?"Verified":"Not verified")+' · '+(prem?"Premium":"Normal")+'</small></div><div class="admin-user-actions"><button data-admin-action="verify" data-value="'+(!u.verified)+'">'+(u.verified?"Ondoa ✓":"Verify")+'</button><button data-admin-action="premium" data-value="'+(!prem)+'">'+(prem?"Ondoa Premium":"Premium 30d")+'</button><button data-admin-action="role" data-value="'+(u.role==="admin"?"user":"admin")+'">'+(u.role==="admin"?"Make user":"Make admin")+'</button></div></article>';
-  }).join("")||'<div class="empty-state">Hakuna users bado.</div>';
+let adminUsersCache=[];
+function adminUserIsPremium(user){return !!(user.premium_until&&new Date(user.premium_until)>new Date());}
+function filterAdminUsers(){
+ const search=($("adminSearch")?.value||"").trim().toLowerCase(),filter=$("adminFilter")?.value||"all";
+ return adminUsersCache.filter(user=>{
+  const matchesSearch=(user.display_name||"").toLowerCase().includes(search)||(user.username||"").toLowerCase().includes(search);
+  const premium=adminUserIsPremium(user);
+  return matchesSearch&&(filter==="all"||(filter==="unverified"&&!user.verified)||(filter==="verified"&&user.verified)||(filter==="premium"&&premium)||(filter==="admins"&&user.role==="admin")||(filter==="normal"&&user.role!=="admin"));
+ });
 }
+function renderAdminRows(){
+ const users=filterAdminUsers();$("adminResultCount").textContent="Inaonyesha "+users.length+" kati ya "+adminUsersCache.length+" users";
+ $("adminUsers").innerHTML=users.map(u=>{
+  const premium=adminUserIsPremium(u),self=u.id===signedInUser.id;
+  const tags='<div class="admin-user-tags">'+(u.verified?'<span class="tag-verified">✓ Verified</span>':'<span>Not verified</span>')+(premium?'<span class="tag-premium">✦ Premium</span>':'<span>Normal</span>')+(u.role==="admin"?'<span class="tag-admin">Admin</span>':'')+'</div>';
+  const joined=u.created_at?new Date(u.created_at).toLocaleDateString("sw-TZ"):"";
+  return '<article class="admin-user-row" data-user-id="'+escapeHTML(u.id)+'"><div class="admin-user-info"><strong>'+escapeHTML(u.display_name||u.username||"Mtumiaji")+(self?' <small>(Wewe)</small>':'')+'</strong><small>@'+escapeHTML(u.username||"user")+' · '+escapeHTML(joined)+'</small>'+tags+'</div><div class="admin-user-actions"><button data-admin-action="verify" data-value="'+(!u.verified)+'">'+(u.verified?"Ondoa Verify":"✓ Verify")+'</button><button data-admin-action="premium" data-value="'+(!premium)+'">'+(premium?"Ondoa Premium":"Premium +30d")+'</button><button data-admin-action="role" data-value="'+(u.role==="admin"?"user":"admin")+'" '+(self?'disabled title="Huwezi kubadilisha role yako hapa"':'')+'>'+(u.role==="admin"?"Ondoa Admin":"Make Admin")+'</button></div></article>';
+ }).join("")||'<div class="empty-state">Hakuna user anayelingana na utafutaji huu.</div>';
+}
+async function renderAdminUsers(){
+ if(!signedInUser||state.profile.role!=="admin")return;
+ $("adminUsers").innerHTML='<div class="empty-state">Inapakia users...</div>';
+ const {data,error}=await sbClient.from("profiles").select("id,username,display_name,role,verified,premium_until,created_at").order("created_at",{ascending:false}).limit(1000);
+ if(error){$("adminUsers").innerHTML='<div class="empty-state">Imeshindwa kupakia: '+escapeHTML(error.message)+'</div>';return;}
+ adminUsersCache=data||[];
+ const verified=adminUsersCache.filter(u=>u.verified).length,premium=adminUsersCache.filter(adminUserIsPremium).length,admins=adminUsersCache.filter(u=>u.role==="admin").length;
+ $("adminStats").innerHTML='<div class="admin-stat"><small>Jumla ya users</small><strong>'+adminUsersCache.length+'</strong></div><div class="admin-stat"><small>Verified</small><strong>'+verified+'</strong></div><div class="admin-stat"><small>Premium active</small><strong>'+premium+'</strong></div><div class="admin-stat"><small>Admins</small><strong>'+admins+'</strong></div>';
+ renderAdminRows();
+}
+$("adminSearch").addEventListener("input",renderAdminRows);
+$("adminFilter").addEventListener("change",renderAdminRows);
+$("adminRefresh").addEventListener("click",renderAdminUsers);
 $("closeAdmin").addEventListener("click",()=>$("adminDialog").close());
 $("adminUsers").addEventListener("click",async event=>{
-  const button=event.target.closest("[data-admin-action]");if(!button||state.profile.role!=="admin")return;
-  const id=button.closest("[data-user-id]").dataset.userId,action=button.dataset.adminAction,value=button.dataset.value;
-  const changes={};
-  if(action==="verify")changes.verified=value==="true";
-  if(action==="premium")changes.premium_until=value==="true"?new Date(Date.now()+30*86400000).toISOString():null;
-  if(action==="role")changes.role=value;
-  const {error}=await sbClient.from("profiles").update(changes).eq("id",id);
-  if(error){showToast("Action imekataliwa: "+error.message);return;}
-  showToast("User amesasishwa.");await renderAdminUsers();if(id===signedInUser.id)await loadUserProfile();
+ const button=event.target.closest("[data-admin-action]");
+ if(!button||state.profile.role!=="admin"||button.disabled)return;
+ const id=button.closest("[data-user-id]").dataset.userId,action=button.dataset.adminAction,value=button.dataset.value;
+ const user=adminUsersCache.find(item=>item.id===id);if(!user)return;
+ const changes={};
+ if(action==="verify")changes.verified=value==="true";
+ if(action==="premium"){
+  if(value==="true"&&!confirm("Mpe user huyu Premium kwa siku 30?"))return;
+  changes.premium_until=value==="true"?new Date(Date.now()+30*86400000).toISOString():null;
+ }
+ if(action==="role"){
+  if(!confirm(value==="admin"?"Mpe user huyu ruhusa za Admin? Admin ataweza kusimamia akaunti nyingine.":"Ondoa ruhusa za Admin kwa user huyu?"))return;
+  changes.role=value;
+ }
+ button.disabled=true;
+ const {error}=await sbClient.from("profiles").update(changes).eq("id",id);
+ if(error){button.disabled=false;showToast("Action imekataliwa: "+error.message);return;}
+ showToast(action==="verify"?(value==="true"?"User ameverified.":"Verification imeondolewa."):action==="premium"?(value==="true"?"Premium imeongezwa siku 30.":"Premium imeondolewa."):(value==="admin"?"Admin role imeongezwa.":"Admin role imeondolewa."));
+ await renderAdminUsers();
+ if(id===signedInUser.id)await loadUserProfile();
 });
 document.addEventListener("click",async event=>{
   const admin=event.target.closest('[data-setting="admin"]');
