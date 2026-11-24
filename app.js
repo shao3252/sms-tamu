@@ -298,7 +298,8 @@ function openEditPost(post) {
   }
 
   activeEditPostId = post.id;
-  $("editPostCategory").value = post.category || "Message Kuu";
+  $("editPostCategory").value = post.category || "Ujumbe wa Mapenzi";
+  $("editPostFormat").value = post.format || "Ujumbe wa kawaida";
   $("editPostText").value = post.text;
   $("editPostDialog").showModal();
 }
@@ -576,34 +577,22 @@ $("postForm").addEventListener("submit", event => {
   event.preventDefault();
   const text = $("postText").value.trim();
   if (!text) return;
-
   state.posts.unshift({
-    id: Date.now(),
-    name: state.profile.name,
-    username: state.profile.username,
-    verified: state.profile.verified,
-    category: $("postCategory").value,
-    group: $("postGroup").value,
-    status: "pending",
-    text,
-    likes: 0,
-    liked: false,
-    saved: false,
-    comments: [],
-    mine: true,
-    time: "Sasa"
+    id: Date.now(), name: state.profile.name, username: state.profile.username,
+    verified: false, category: $("postCategory").value, format: $("postFormat").value,
+    status: "published", text, likes: 0, liked: false, saved: false,
+    comments: [], mine: true, time: "Sasa"
   });
-
   saveState();
   $("postText").value = "";
   $("characterCount").textContent = "0/700";
+  $("postFormat").value = "Ujumbe wa kawaida";
   activeCategory = "Vyote";
-  document.querySelectorAll(".category").forEach(button => {
-    button.classList.toggle("active", button.dataset.category === "Vyote");
-  });
+  document.querySelectorAll(".category").forEach(button => button.classList.toggle("active", button.dataset.category === "Vyote"));
   renderHome();
+  renderProfile();
   goToScreen("homeScreen");
-  showToast("Posti imetumwa kwa ukaguzi. Itaonekana baada ya kuidhinishwa.");
+  showToast("Posti yako imechapishwa kwenye feed.");
 });
 
 $("closeComments").addEventListener("click", () => $("commentsDialog").close());
@@ -697,6 +686,7 @@ $("editPostForm").addEventListener("submit", event => {
 
   post.text = text;
   post.category = $("editPostCategory").value;
+  post.format = $("editPostFormat").value;
   saveState();
   $("editPostDialog").close();
   renderHome();
