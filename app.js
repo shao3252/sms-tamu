@@ -244,6 +244,27 @@ function renderSearch(query) {
   renderFeed("searchResults", results);
 }
 
+function renderProfile() {
+  const profile = state.profile || defaultProfile;
+  $("profileName").textContent = profile.name || "Mtumiaji";
+  $("profileUsername").textContent = "@" + (profile.username || "user");
+  $("profileBio").textContent = profile.bio || "Karibu SMS TAMU.";
+  $("profileVerified").hidden = true;
+  $("profileAvatar").innerHTML = profile.avatar
+    ? '<img src="' + escapeHTML(profile.avatar) + '" alt="Picha ya wasifu">'
+    : escapeHTML((profile.name || "U").charAt(0).toUpperCase());
+  $("followingCount").textContent = state.following.length;
+  $("followersCount").textContent = state.followers.length;
+  document.querySelectorAll("[data-profile-tab]").forEach(button => {
+    button.classList.toggle("active", button.dataset.profileTab === activeProfileTab);
+  });
+  const own = state.posts.filter(post => post.username === profile.username || post.mine);
+  let shown = own;
+  if (activeProfileTab === "liked") shown = state.posts.filter(post => post.liked);
+  if (activeProfileTab === "saved") shown = state.posts.filter(post => post.saved);
+  renderFeed("myPosts", shown.filter(post => post.status !== "removed"));
+}
+
 function getPostFromElement(element) {
   const card = element.closest("[data-post-id]");
   if (!card) return null;
