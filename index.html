@@ -1,62 +1,87 @@
 <!DOCTYPE html>
 <html lang="sw">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMS TAMU</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f0f1f6">
+  <title>SMS TAMU</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header class="site-header">
-        <a class="logo" href="index.html">SMS <span>TAMU</span></a>
-    </header>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="SMS TAMU home">Sms Tamu <span>♥</span></a>
+    <button class="header-action" id="headerSearch" aria-label="Tafuta">⌕</button>
+  </header>
 
-    <main class="page-main">
-        <section class="welcome content-panel" id="welcomeSection">
-            <div class="eyebrow">Karibu kwenye SMS TAMU</div>
-            <h1>Maneno mazuri,<br><span>hisia za kweli.</span></h1>
-            <p>Pata ujumbe mtamu wa kuonyesha upendo, kujali na kuthamini watu muhimu katika maisha yako.</p>
-            <button class="primary-button" id="welcomeButton" type="button">Karibu</button>
-        </section>
+  <main class="app-main">
+    <section class="screen active" id="homeScreen">
+      <div class="category-strip" id="categoryStrip">
+        <button class="category active" data-category="Vyote">Vyote</button>
+        <button class="category" data-category="Message Kuu">💌 Message Kuu</button>
+        <button class="category" data-category="Kuwa Msham">Kuwa Msham</button>
+        <button class="category" data-category="Kasfi">Kasfi</button>
+      </div>
+      <div class="feed" id="feed"></div>
+    </section>
 
-        <section class="auth-card content-panel" id="loginSection" aria-labelledby="loginTitle" hidden>
-            <div class="eyebrow">SMS TAMU</div>
-            <h2 id="loginTitle">Log in</h2>
-            <p class="intro">Ingia kwenye akaunti yako kuendelea.</p>
-            <form id="loginForm">
-                <label for="loginId">Email, username au namba ya simu</label>
-                <input id="loginId" name="loginId" type="text" placeholder="Email, username au simu" autocomplete="username" required>
-                <label for="password">Password</label>
-                <input id="password" name="password" type="password" placeholder="Andika password yako" autocomplete="current-password" required>
-                <button class="primary-button full-width" type="submit">Log in</button>
-                <button class="text-button full-width" id="forgotButton" type="button">Forgot password?</button>
-                <p class="notice" id="loginNotice" role="status" hidden></p>
-            </form>
-            <button class="back-button" id="backButton" type="button">← Rudi nyuma</button>
-        </section>
+    <section class="screen" id="searchScreen">
+      <div class="section-heading"><h1>Tafuta</h1></div>
+      <label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Tafuta ujumbe au mtumiaji..."></label>
+      <div class="feed" id="searchResults"></div>
+    </section>
 
-        <section class="welcome content-panel" id="dashboardSection" hidden>
-            <div class="eyebrow">Umeingia kwa mafanikio</div>
-            <h1>Karibu kwenye<br><span>SMS TAMU.</span></h1>
-            <p>Hii ndiyo preview page baada ya kuingia. Muonekano na vipengele vingine tutaongeza hatua kwa hatua.</p>
-            <button class="primary-button" id="logoutButton" type="button">Toka</button>
-        </section>
+    <section class="screen" id="composeScreen">
+      <div class="section-heading"><h1>Andika Ujumbe</h1><p>Shiriki maneno yenye hisia.</p></div>
+      <form class="compose-card" id="postForm">
+        <label for="postCategory">Aina ya ujumbe</label>
+        <select id="postCategory">
+          <option>Message Kuu</option><option>Kuwa Msham</option><option>Kasfi</option><option>Ushauri</option>
+        </select>
+        <label for="postText">Andika ujumbe wako</label>
+        <textarea id="postText" rows="5" maxlength="700" placeholder="Andika ujumbe mtamu hapa..." required></textarea>
+        <div class="compose-footer"><span id="characterCount">0/700</span><button class="primary-button" type="submit">Shiriki Ujumbe</button></div>
+      </form>
+    </section>
 
-        <section class="auth-card content-panel" id="forgotSection" aria-labelledby="forgotTitle" hidden>
-            <div class="eyebrow">SMS TAMU</div>
-            <h2 id="forgotTitle">Forgot password?</h2>
-            <p class="intro">Weka email au namba ya simu uliyoitumia. Mfumo wa kurejesha password utaunganishwa na database baadaye.</p>
-            <form id="forgotForm">
-                <label for="recoveryId">Email au namba ya simu</label>
-                <input id="recoveryId" name="recoveryId" type="text" placeholder="Email au namba ya simu" required>
-                <button class="primary-button full-width" type="submit">Endelea</button>
-                <p class="notice" id="forgotNotice" role="status" hidden></p>
-            </form>
-            <button class="back-button" id="forgotBackButton" type="button">← Rudi kwenye Log in</button>
-        </section>
-    </main>
+    <section class="screen" id="chatScreen">
+      <div class="section-heading"><h1>Chat</h1><p>Ujumbe wako wa faragha</p></div>
+      <div class="chat-list" id="chatList"></div>
+      <div class="chat-window" id="chatWindow" hidden>
+        <div class="chat-head"><button class="back-link" id="backToChats">‹</button><div class="avatar">S</div><div><strong id="chatUserName">Shauku</strong><small>Online</small></div></div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <form class="chat-compose" id="chatForm"><input id="chatMessageInput" placeholder="Andika ujumbe..." autocomplete="off" required><button class="send-button" aria-label="Tuma ujumbe">➤</button></form>
+      </div>
+    </section>
 
-    <footer class="site-footer">© <span id="year"></span> SMS TAMU. Haki zote zimehifadhiwa.</footer>
-    <script src="app.js"></script>
+    <section class="screen" id="profileScreen">
+      <div class="profile-card">
+        <div class="profile-cover"></div><div class="profile-avatar">S</div>
+        <h1 id="profileName">Sms Tamu User</h1><p>@smsuser · Mwanachama</p>
+        <div class="profile-stats"><div><strong id="postCount">0</strong><span>Posts</span></div><div><strong>0</strong><span>Wafuasi</span></div><div><strong>0</strong><span>Unafuata</span></div></div>
+        <button class="outline-button" id="editProfile">Hariri Profile</button>
+      </div>
+      <div class="profile-posts"><h2>Ujumbe wangu</h2><div id="myPosts"></div></div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Navigation">
+    <button class="nav-item selected" data-screen="homeScreen"><span class="nav-icon">⌂</span><small>Nyumbani</small></button>
+    <button class="nav-item" data-screen="searchScreen"><span class="nav-icon">⌕</span><small>Tafuta</small></button>
+    <button class="nav-item add-nav" data-screen="composeScreen" aria-label="Andika ujumbe"><span>＋</span></button>
+    <button class="nav-item" data-screen="chatScreen"><span class="nav-icon">▢</span><small>Chat</small></button>
+    <button class="nav-item" data-screen="profileScreen"><span class="nav-icon">♙</span><small>Wasifu</small></button>
+  </nav>
+
+  <div class="toast" id="toast" role="status"></div>
+  <dialog id="commentsDialog" class="comments-dialog">
+    <div class="dialog-head"><h2>Maoni</h2><button class="close-dialog" id="closeComments">×</button></div>
+    <div id="commentsList"></div>
+    <form id="commentForm" class="comment-form"><input id="commentInput" placeholder="Andika maoni..." required><button class="primary-button">Tuma</button></form>
+  </dialog>
+  <dialog id="profileDialog" class="comments-dialog">
+    <div class="dialog-head"><h2>Hariri wasifu</h2><button class="close-dialog" id="closeProfile">×</button></div>
+    <form id="profileForm" class="profile-form"><label>Jina la kuonyesha</label><input id="editNameInput" maxlength="40" required><label>Username</label><input id="editUsernameInput" maxlength="24" required><button class="primary-button">Hifadhi</button></form>
+  </dialog>
+  <script src="app.js"></script>
 </body>
 </html>
