@@ -1,27 +1,33 @@
 # SMS TAMU
 
-SMS TAMU ni web app ya Kiswahili ya kushiriki posti za mapenzi, kuwasiliana na kujenga profile.
+SMS TAMU ni web app ya Kiswahili ya kushiriki ujumbe, kujenga wasifu na kuwasiliana.
 
 ## Files (root)
-- `index.html` — interface, sign-in/sign-up and dialogs.
-- `style.css` — styles and SVG icon appearance.
-- `app.js` — app interactions, Supabase auth, feed and admin UI.
+- `index.html` — app interface, auth and dialogs.
+- `style.css` — styling and responsive layout.
+- `app.js` — frontend logic and Supabase realtime connections.
 
 ## Supabase
-Project: `qtsanhytungskipatyqc`
-Region: `eu-west-1`
+Project: `qtsanhytungskipatyqc` (eu-west-1)
 
-Supabase is connected with the public publishable key in `index.html`. Never put a `service_role` or secret key in browser code.
+The browser uses the Supabase publishable key only. Never put a `service_role` or secret key in frontend code.
 
-Database tables include:
-- `profiles`: account details, role, verified and premium expiry
-- `posts`, `comments`, `post_likes`, `follows`
-- `conversations`, `conversation_members`, `messages`
+## Live features
+- Supabase email/password sign-up and login.
+- Feed posts stored in `posts`, with realtime feed refresh.
+- Likes, comments and saved posts stored in the database.
+- Profile name, username, bio, avatar, privacy and notification preference saved to `profiles`.
+- Followers/following stored in `follows`.
+- Public SMS TAMU group and private direct chats stored in `conversations`, `conversation_members` and `messages`.
+- Realtime chat updates for messages.
+- Profile privacy is enforced by RLS for profiles, posts and comments.
+- Admin verification and Premium controls remain available in Admin Dashboard.
 
-Row Level Security is enabled. Normal users cannot update their own role, verified flag or premium expiry. The admin dashboard can grant verification, premium for 30 days, and admin role.
+## Storage
+The `sms-tamu-avatars` public bucket stores profile images. Upload/update/delete policies restrict writes to the signed-in user's own folder.
 
 ## First admin setup
-The project starts with no registered users. First create your own account in SMS TAMU. Then set that account to admin in Supabase SQL Editor using its exact email:
+Register your account first. Then use Supabase SQL Editor and replace the email below with your own registered email:
 
 ```sql
 update public.profiles
@@ -29,10 +35,12 @@ set role = 'admin'
 where id = (select id from auth.users where email = 'YOUR_ACCOUNT_EMAIL');
 ```
 
-Replace `YOUR_ACCOUNT_EMAIL` with the email you registered. After this, sign out and sign in again; the Admin Dashboard will appear in Settings.
+Sign out and sign in again. Admin Dashboard will appear in Settings.
 
 ## Premium
-Premium access is stored as `premium_until` (expiry timestamp), not as an admin role. Admin can grant 30 days or remove Premium from the dashboard. The app displays the Premium badge while the membership is active.
+Premium is separate from Admin and uses `premium_until`. Admin can grant 30 days or remove Premium.
 
-## Current scope
-Authentication, profile loading, cloud post creation/feed and admin verification/premium controls are connected. Chat tables and realtime publication are prepared in Supabase; the current chat UI still needs its live conversation/member/message workflow connected before it becomes real-time messaging.
+## Notes
+- For instant registration/login, turn off Email provider's **Confirm email** setting in Supabase Auth.
+- Push notifications for the phone/browser are not enabled yet; the saved notifications preference is ready.
+- Group title/topic/pinned-message moderation and full user discovery are the next improvements after this live core.
