@@ -1,17 +1,59 @@
 const $ = (id) => document.getElementById(id);
 const STORAGE_KEY = "sms-tamu-user-demo-v1";
 const defaultPosts = [ {
-  id:1,name:"VeeAmor",username:"veeamor",verified:true,category:"Message Kuu",text:"Siwezi sema sijawahi kuwa na makosa, lakini nikikumbuka namna ulivyonipa nafasi ya kuwa mimi, moyo wangu unajaa shukrani. Wewe ni sehemu nzuri ya maisha yangu. ❤️",likes:18,liked:false,saved:false,comments:[{
-    name:"Shauku",text:"Ujumbe mzuri sana."
-  }],mine:false
+  id:1,
+  name:"VeeAmor",
+  username:"veeamor",
+  verified:true,
+  category:"Message Kuu",
+  text:"Siwezi sema sijawahi kuwa na makosa, lakini nikikumbuka namna ulivyonipa nafasi ya kuwa mimi, moyo wangu unajaa shukrani. Wewe ni sehemu nzuri ya maisha yangu. ❤️",
+  likes:18,
+  liked:false,
+  saved:false,
+  comments:[{
+    name:"Shauku",
+    text:"Ujumbe mzuri sana."
+  }],
+  mine:false
 }, {
-  id:2,name:"VeeAmor",username:"veeamor",verified:true,category:"Kuwa Msham",text:"Kwahiyo kosa langu ni kukuhusu kwa namna ambayo hunijui, huku nikijua bado kuna mengi ya kujifunza kuhusu wewe. Safari ya upendo ni kujifunza kila siku.",likes:7,liked:false,saved:false,comments:[],mine:false
+  id:2,
+  name:"VeeAmor",
+  username:"veeamor",
+  verified:true,
+  category:"Kuwa Msham",
+  text:"Kwahiyo kosa langu ni kukuhusu kwa namna ambayo hunijui, huku nikijua bado kuna mengi ya kujifunza kuhusu wewe. Safari ya upendo ni kujifunza kila siku.",
+  likes:7,
+  liked:false,
+  saved:false,
+  comments:[],
+  mine:false
 }, {
-  id:3,name:"Shauku",username:"shauku",verified:true,category:"Ushauri",text:"Usimlazimishe mtu akuone wa muhimu. Upendo wa kweli hauhitaji kushindana ili upate nafasi; unahitaji moyo unaochagua kwa hiari.",likes:31,liked:false,saved:false,comments:[{
-    name:"VeeAmor",text:"Kweli kabisa 💗"
-  }],mine:false
+  id:3,
+  name:"Shauku",
+  username:"shauku",
+  verified:true,
+  category:"Ushauri",
+  text:"Usimlazimishe mtu akuone wa muhimu. Upendo wa kweli hauhitaji kushindana ili upate nafasi; unahitaji moyo unaochagua kwa hiari.",
+  likes:31,
+  liked:false,
+  saved:false,
+  comments:[{
+    name:"VeeAmor",
+    text:"Kweli kabisa 💗"
+  }],
+  mine:false
 }, {
-  id:4,name:"Sms Tamu",username:"smstamu",verified:true,category:"Message Kuu",text:"Kuna watu wanakuja maishani mwako na kufanya hata siku za kawaida ziwe na maana. Mthamini anayekupa amani, heshima na furaha.",likes:12,liked:false,saved:false,comments:[],mine:false
+  id:4,
+  name:"Sms Tamu",
+  username:"smstamu",
+  verified:true,
+  category:"Message Kuu",
+  text:"Kuna watu wanakuja maishani mwako na kufanya hata siku za kawaida ziwe na maana. Mthamini anayekupa amani, heshima na furaha.",
+  likes:12,
+  liked:false,
+  saved:false,
+  comments:[],
+  mine:false
 }
 ];
 let state = loadState();
@@ -25,24 +67,40 @@ function loadState(){
     return {
       posts:Array.isArray(saved.posts)?saved.posts:defaultPosts.map(p=>({
         ...p,comments:[...p.comments]
-      })), profile:saved.profile||{
-        name:"Sms Tamu User",username:"smsuser"
-      }, chats:saved.chats||[ {
-        id:"shauku",name:"Shauku",last:"Habari yako?"
-      }, {
-        id:"veeamor",name:"VeeAmor",last:"Ujumbe wako umenigusa."
-      }, {
-        id:"ally",name:"Ally",last:"Asante sana"
+      })),
+      profile:saved.profile||{
+        name:"Sms Tamu User",
+        username:"smsuser"
+      },
+      chats:saved.chats||[ {
+        id:"shauku",
+        name:"Shauku",
+        last:"Habari yako?"
+      },
+      {
+        id:"veeamor",
+        name:"VeeAmor",
+        last:"Ujumbe wako umenigusa."
+      },
+      {
+        id:"ally",
+        name:"Ally",
+        last:"Asante sana"
       }
-      ], messages:saved.messages||{
+      ],
+      messages:saved.messages||{
       }
     };
   }
   catch(e){
     return {
-      posts:defaultPosts,profile:{
-        name:"Sms Tamu User",username:"smsuser"
-      },chats:[],messages:{
+      posts:defaultPosts,
+      profile:{
+        name:"Sms Tamu User",
+        username:"smsuser"
+      },
+      chats:[],
+      messages:{
       }
     };
   }
