@@ -3,63 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMS TAMU | Karibu</title>
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            margin: 0; min-height: 100vh; font-family: Arial, Helvetica, sans-serif;
-            background: #090909; color: #f5f5f5; display: flex; flex-direction: column;
-        }
-        header {
-            padding: 22px 7%; display: flex; align-items: center;
-            border-bottom: 1px solid #242424;
-        }
-        .logo { font-size: 1.25rem; font-weight: 800; letter-spacing: 1px; }
-        .logo span { color: #e9b44c; }
-        main { flex: 1; display: grid; place-items: center; text-align: center; padding: 50px 20px; }
-        .content { width: 100%; max-width: 720px; }
-        .eyebrow { color: #e9b44c; text-transform: uppercase; letter-spacing: 3px; font-size: .8rem; font-weight: 700; }
-        h1 { font-size: clamp(2.5rem, 7vw, 5rem); line-height: 1.05; margin: 20px 0; }
-        h1 span { color: #e9b44c; }
-        p { color: #bdbdbd; font-size: 1.1rem; line-height: 1.8; margin: 0 auto 32px; max-width: 560px; }
-        .button {
-            display: inline-block; padding: 14px 28px; background: #e9b44c; color: #111;
-            border: 0; text-decoration: none; border-radius: 8px; font-weight: 700; cursor: pointer;
-        }
-        .login-card {
-            display: none; width: 100%; max-width: 420px; text-align: left;
-            background: #111; border: 1px solid #292929; border-radius: 16px; padding: 30px;
-        }
-        .login-card h2 { margin: 0 0 10px; font-size: 2rem; }
-        .login-card .intro { margin: 0 0 24px; font-size: .95rem; }
-        label { display: block; margin: 16px 0 8px; color: #ddd; font-size: .9rem; }
-        input {
-            width: 100%; padding: 13px 14px; border: 1px solid #333; border-radius: 8px;
-            background: #090909; color: #fff; font: inherit; outline: none;
-        }
-        input:focus { border-color: #e9b44c; }
-        .login-card .button { width: 100%; margin-top: 22px; font-size: 1rem; }
-        .back-button {
-            display: block; margin: 18px auto 0; background: none; border: 0;
-            color: #c9c9c9; cursor: pointer; font: inherit;
-        }
-        .notice { display: none; color: #e9b44c; font-size: .9rem; margin: 14px 0 0; text-align: center; }
-        footer { padding: 20px; text-align: center; color: #777; border-top: 1px solid #242424; font-size: .85rem; }
-        @media (max-width: 480px) { .login-card { padding: 24px 20px; } }
-    </style>
+    <title>SMS TAMU</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header><div class="logo">SMS <span>TAMU</span></div></header>
+    <header class="site-header">
+        <a class="logo" href="index.html">SMS <span>TAMU</span></a>
+    </header>
 
-    <main>
-        <section class="content" id="welcomeSection">
+    <main class="page-main">
+        <section class="welcome content-panel" id="welcomeSection">
             <div class="eyebrow">Karibu kwenye SMS TAMU</div>
             <h1>Maneno mazuri,<br><span>hisia za kweli.</span></h1>
             <p>Pata ujumbe mtamu wa kuonyesha upendo, kujali na kuthamini watu muhimu katika maisha yako.</p>
-            <button class="button" id="welcomeButton" type="button">Karibu</button>
+            <button class="primary-button" id="welcomeButton" type="button">Karibu</button>
         </section>
 
-        <section class="login-card" id="loginSection" aria-labelledby="loginTitle">
+        <section class="auth-card content-panel" id="loginSection" aria-labelledby="loginTitle" hidden>
             <div class="eyebrow">SMS TAMU</div>
             <h2 id="loginTitle">Log in</h2>
             <p class="intro">Ingia kwenye akaunti yako kuendelea.</p>
@@ -68,76 +28,35 @@
                 <input id="loginId" name="loginId" type="text" placeholder="Email, username au simu" autocomplete="username" required>
                 <label for="password">Password</label>
                 <input id="password" name="password" type="password" placeholder="Andika password yako" autocomplete="current-password" required>
-                <button class="button" type="submit">Log in</button>
-                <button class="back-button" id="forgotButton" type="button">Forgot password?</button>
-                <p class="notice" id="loginNotice" role="status">Muonekano wa login umewekwa. Mfumo wa akaunti utaunganishwa baadaye.</p>
+                <button class="primary-button full-width" type="submit">Log in</button>
+                <button class="text-button full-width" id="forgotButton" type="button">Forgot password?</button>
+                <p class="notice" id="loginNotice" role="status" hidden></p>
             </form>
             <button class="back-button" id="backButton" type="button">← Rudi nyuma</button>
         </section>
 
-        <section class="login-card" id="forgotSection" aria-labelledby="forgotTitle">
+        <section class="welcome content-panel" id="dashboardSection" hidden>
+            <div class="eyebrow">Umeingia kwa mafanikio</div>
+            <h1>Karibu kwenye<br><span>SMS TAMU.</span></h1>
+            <p>Hii ndiyo preview page baada ya kuingia. Muonekano na vipengele vingine tutaongeza hatua kwa hatua.</p>
+            <button class="primary-button" id="logoutButton" type="button">Toka</button>
+        </section>
+
+        <section class="auth-card content-panel" id="forgotSection" aria-labelledby="forgotTitle" hidden>
             <div class="eyebrow">SMS TAMU</div>
             <h2 id="forgotTitle">Forgot password?</h2>
             <p class="intro">Weka email au namba ya simu uliyoitumia. Mfumo wa kurejesha password utaunganishwa na database baadaye.</p>
             <form id="forgotForm">
                 <label for="recoveryId">Email au namba ya simu</label>
                 <input id="recoveryId" name="recoveryId" type="text" placeholder="Email au namba ya simu" required>
-                <button class="button" type="submit">Endelea</button>
-                <p class="notice" id="forgotNotice" role="status">Sehemu hii ni preview tu. Urejeshaji wa password utaanza baada ya kuunganisha database.</p>
+                <button class="primary-button full-width" type="submit">Endelea</button>
+                <p class="notice" id="forgotNotice" role="status" hidden></p>
             </form>
             <button class="back-button" id="forgotBackButton" type="button">← Rudi kwenye Log in</button>
         </section>
     </main>
 
-    <footer>&copy; <span id="year"></span> SMS TAMU. Haki zote zimehifadhiwa.</footer>
-
-    <script>
-        document.getElementById("year").textContent = new Date().getFullYear();
-
-        const welcomeSection = document.getElementById("welcomeSection");
-        const loginSection = document.getElementById("loginSection");
-        const forgotSection = document.getElementById("forgotSection");
-
-        document.getElementById("welcomeButton").addEventListener("click", function () {
-            welcomeSection.style.display = "none";
-            loginSection.style.display = "block";
-        });
-
-        document.getElementById("backButton").addEventListener("click", function () {
-            loginSection.style.display = "none";
-            welcomeSection.style.display = "block";
-            document.getElementById("loginNotice").style.display = "none";
-        });
-
-        document.getElementById("forgotButton").addEventListener("click", function () {
-            loginSection.style.display = "none";
-            forgotSection.style.display = "block";
-        });
-
-        document.getElementById("forgotBackButton").addEventListener("click", function () {
-            forgotSection.style.display = "none";
-            loginSection.style.display = "block";
-            document.getElementById("forgotNotice").style.display = "none";
-        });
-
-        document.getElementById("loginForm").addEventListener("submit", function (event) {
-            event.preventDefault();
-            const loginId = document.getElementById("loginId").value.trim();
-            const password = document.getElementById("password").value;
-            const allowedIds = ["smsdemo", "0712345678"];
-            if (allowedIds.includes(loginId) && password === "123456") {
-                document.getElementById("loginNotice").textContent = "Umeingia kwa mafanikio kwenye preview ya SMS TAMU!";
-                document.getElementById("loginNotice").style.display = "block";
-            } else {
-                document.getElementById("loginNotice").textContent = "Username/namba au password si sahihi. Tumia akaunti ya majaribio iliyoonyeshwa kwenye maelekezo.";
-                document.getElementById("loginNotice").style.display = "block";
-            }
-        });
-
-        document.getElementById("forgotForm").addEventListener("submit", function (event) {
-            event.preventDefault();
-            document.getElementById("forgotNotice").style.display = "block";
-        });
-    </script>
+    <footer class="site-footer">© <span id="year"></span> SMS TAMU. Haki zote zimehifadhiwa.</footer>
+    <script src="app.js"></script>
 </body>
 </html>
