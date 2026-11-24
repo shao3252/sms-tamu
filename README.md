@@ -51,3 +51,15 @@ Premium is separate from Admin and uses `premium_until`. Admin can grant 30 days
 - For instant registration/login, turn off Email provider's **Confirm email** setting in Supabase Auth.
 - Browser/phone push notifications are not enabled; the saved preference only records the user's choice. Full push requires a push provider/service worker and permission flow.
 - Group title/topic/pinned-message management and a full searchable user directory are not complete yet. The app's former browser demo seed feed/follower/chat entries were removed so the UI no longer presents fake sample content as real activity.
+
+
+## Premium Text Library
+
+The app now includes a Premium Text Library with:
+
+- Hot Text (non-explicit, age-appropriate romantic/flirty messages), plus apology, missing-you, good-night, anniversary and special-occasion collections.
+- Premium-only access enforced with Supabase Row Level Security (RLS), based on the profile's active `premium_until` or Admin role.
+- Favorites, user-created collections, daily Premium text rotation, and a personalized message generator.
+- Admin Text Manager to create, edit, hide/publish, delete, categorize, feature, and mark daily or Premium messages.
+
+Database migration applied: `premium_text_library_features` and `secure_premium_collection_items_owner`. Tables are RLS-enabled. Admin/Premium remain separate permissions.
