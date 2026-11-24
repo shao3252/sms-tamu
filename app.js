@@ -195,11 +195,10 @@ function postCard(post) {
             ${escapeHTML(post.name)}
             ${post.verified ? '<span class="verified-badge small-verified">✓</span>' : ""}
           </div>
-          <div class="post-time">${escapeHTML(post.time || "159d ago")} <span class="post-tag">${escapeHTML(post.category || "Ujumbe")}</span> <span class="post-owner-tag">✏️ ${escapeHTML(post.group || "SMS TAMU GROUP")}</span></div>
+          <div class="post-time">${escapeHTML(post.time || "Sasa")} <span class="post-tag">${escapeHTML(post.category || "Ujumbe")}</span> ${post.format ? '<span class="post-tag format-tag">' + escapeHTML(post.format) + '</span>' : ""}</div>
         </div>
         ${isMine ? '<button class="more-post-button" data-action="post-menu" aria-label="Chaguo za posti">⋯</button>' : ""}
       </div>
-      ${post.status === "pending" ? '<span class="pending-tag">Inasubiri ukaguzi</span>' : ""}
     <p class="post-text">${escapeHTML(post.text)}</p>
       <div class="post-actions">
         <button class="action-button like-button ${post.liked ? "liked" : ""}" data-action="like"><span class="action-icon">${post.liked ? "♥" : "♡"}</span><span>${post.likes}</span></button>
@@ -225,22 +224,20 @@ function renderFeed(targetId, posts) {
 }
 
 function renderHome() {
-  const approvedPosts = state.posts.filter(post => post.status !== "pending");
+  const visiblePosts = state.posts.filter(post => post.status !== "removed");
   const posts = activeCategory === "Vyote"
-    ? approvedPosts
-    : approvedPosts.filter(post => post.category === activeCategory);
+    ? visiblePosts
+    : visiblePosts.filter(post => post.category === activeCategory);
   renderFeed("feed", posts);
 }
 
 function renderSearch(query) {
   const term = (query || "").trim().toLowerCase();
-  const approvedPosts = state.posts.filter(post => post.status !== "pending");
-  const results = !term
-    ? approvedPosts
-    : approvedPosts.filter(post =>
-      (post.text + " " + post.name + " " + post.username + " " + post.category + " " + (post.group || ""))
-        .toLowerCase().includes(term)
-    );
+  const visiblePosts = state.posts.filter(post => post.status !== "removed");
+  const results = !term ? visiblePosts : visiblePosts.filter(post =>
+    (post.text + " " + post.name + " " + post.username + " " + post.category + " " + (post.format || ""))
+      .toLowerCase().includes(term)
+  );
   renderFeed("searchResults", results);
 }
 
