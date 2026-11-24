@@ -678,3 +678,11 @@ button {
 .format-tag{display:inline-block;margin-left:4px;padding:2px 7px;border-radius:10px;background:#fff0f5;color:#d83e79;font-size:10px}
 .compose-card select:focus,.compose-card textarea:focus{border-color:var(--pink);background:#fff}
 .chat-head-title small{color:#a06a80}
+
+.ui-icon{width:20px;height:20px;display:inline-block;vertical-align:middle;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.nav-icon .ui-icon{width:23px;height:23px}
+.header-action .ui-icon{width:22px;height:22px}
+.camera-badge .ui-icon{width:14px;height:14px}
+.action-icon .ui-icon,.post-extra-actions .ui-icon{width:16px;height:16px}
+.send-button .ui-icon{width:19px;height:19px}
+.post-extra-actions button{display:inline-flex;align-items:center;gap:6px}
