@@ -248,7 +248,7 @@ function postCard(post) {
       </div>
       <div class="post-extra-actions">
         <button data-action="likes">${iconSVG("users")} Likes</button>
-        ${isMine ? '<button data-action="edit">${iconSVG("edit")} Edit</button><button class="delete-post" data-action="delete">${iconSVG("trash")} Futa</button>' : ""}
+        ${isMine ? '<button data-action="edit">' + iconSVG("edit") + ' Edit</button><button class="delete-post" data-action="delete">' + iconSVG("trash") + ' Futa</button>' : ""}
       </div>
     </article>`;
 }
