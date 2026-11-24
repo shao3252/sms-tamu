@@ -721,3 +721,9 @@ button {
  .admin-user-row{align-items:flex-start;flex-direction:column}
  .admin-user-actions{justify-content:flex-start}
 }
+
+.premium-badge{display:inline-flex;align-items:center;vertical-align:middle;margin-left:7px;padding:4px 8px;border-radius:999px;background:linear-gradient(110deg,#fff0d0,#ffe1a0);color:#956016;font-size:9px;font-weight:850;letter-spacing:.6px}
+.small-premium{font-size:8px;padding:3px 6px;margin-left:5px}
+.auth-brand .auth-heart{font-size:0}
+.auth-brand .auth-heart:before{content:"";width:22px;height:22px;background:#ef4f8a;transform:rotate(-45deg);border-radius:4px;position:relative}
+.auth-brand .auth-heart:after{content:"";position:absolute;width:22px;height:22px;background:#ef4f8a;border-radius:50%;transform:translate(7px,-7px)}
