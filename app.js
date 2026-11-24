@@ -876,10 +876,10 @@ async function loadCloudPosts() {
 }
 async function loadUserProfile() {
   if (!signedInUser) return;
-  let result = await sbClient.from("profiles").select("id,username,display_name,bio,avatar_url,role,verified,premium_until").eq("id",signedInUser.id).maybeSingle();
+  let result = await sbClient.from("profiles").select("id,username,display_name,bio,avatar_url,role,verified,premium_until,is_private,notifications_enabled").eq("id",signedInUser.id).maybeSingle();
   if (!result.data) {
     await new Promise(resolve=>setTimeout(resolve,700));
-    result = await sbClient.from("profiles").select("id,username,display_name,bio,avatar_url,role,verified,premium_until").eq("id",signedInUser.id).maybeSingle();
+    result = await sbClient.from("profiles").select("id,username,display_name,bio,avatar_url,role,verified,premium_until,is_private,notifications_enabled").eq("id",signedInUser.id).maybeSingle();
   }
   if (result.error || !result.data) { showToast("Profile haijapakiwa: "+(result.error?.message||"jaribu refresh")); return; }
   signedInProfile = result.data;
@@ -1163,13 +1163,13 @@ function startLiveSubscriptions() {
 
 async function loadUserProfile() {
   if(!signedInUser||!sbClient)return;
-  let result=await sbClient.from("profiles").select("id,username,display_name,bio,avatar_url,role,verified,premium_until").eq("id",signedInUser.id).maybeSingle();
-  if(!result.data){await new Promise(resolve=>setTimeout(resolve,600));result=await sbClient.from("profiles").select("id,username,display_name,bio,avatar_url,role,verified,premium_until").eq("id",signedInUser.id).maybeSingle();}
+  let result=await sbClient.from("profiles").select("id,username,display_name,bio,avatar_url,role,verified,premium_until,is_private,notifications_enabled").eq("id",signedInUser.id).maybeSingle();
+  if(!result.data){await new Promise(resolve=>setTimeout(resolve,600));result=await sbClient.from("profiles").select("id,username,display_name,bio,avatar_url,role,verified,premium_until,is_private,notifications_enabled").eq("id",signedInUser.id).maybeSingle();}
   if(result.error||!result.data){showToast("Profile haijapakiwa: "+(result.error?.message||"refresh"));return;}
   signedInProfile=result.data;
   state.profile={name:result.data.display_name||"Mtumiaji",username:result.data.username||"user",
     bio:result.data.bio||"",avatar:result.data.avatar_url||"",verified:!!result.data.verified,
-    role:result.data.role||"user",premiumUntil:result.data.premium_until};
+    role:result.data.role||"user",premiumUntil:result.data.premium_until,privacy:result.data.is_private?"private":"public",notifications:result.data.notifications_enabled!==false};
   $("adminSetting").hidden=state.profile.role!=="admin";
   if($("authDialog").open)$("authDialog").close();
   renderProfile();
@@ -1292,3 +1292,29 @@ $("avatarFile").addEventListener("change",async event=>{
 const liveHelp=document.querySelector('[data-setting="help"]');
 if(liveHelp)liveHelp.querySelector("small").textContent="Msaada na maelezo ya SMS TAMU";
 
+
+function openSettingsDetail(type) {
+  const detail=$("settingsDetail");detail.hidden=false;
+  if(type==="privacy"){
+    detail.innerHTML='<h3>Faragha ya wasifu</h3>'+
+      '<label class="setting-choice"><input type="radio" name="privacy" value="public" '+(state.profile.privacy!=="private"?"checked":"")+'> Wasifu wa wazi</label>'+
+      '<label class="setting-choice"><input type="radio" name="privacy" value="private" '+(state.profile.privacy==="private"?"checked":"")+'> Wasifu wa faragha</label>'+
+      '<button class="primary-button" id="savePrivacy">Hifadhi</button>';
+    $("savePrivacy").addEventListener("click",async()=>{
+      const is_private=document.querySelector('input[name="privacy"]:checked').value==="private";
+      const {error}=await sbClient.from("profiles").update({is_private}).eq("id",signedInUser.id);
+      if(error)return showToast("Faragha: "+error.message);
+      state.profile.privacy=is_private?"private":"public";detail.hidden=true;showToast("Faragha imehifadhiwa.");
+    });
+  }else if(type==="notifications"){
+    detail.innerHTML='<h3>Arifa za SMS TAMU</h3><label class="setting-choice"><input type="checkbox" id="notificationToggle" '+(state.profile.notifications!==false?"checked":"")+'> Ruhusu arifa ndani ya app</label><button class="primary-button" id="saveNotifications">Hifadhi</button><p class="form-hint">Hii huhifadhi upendeleo wako. Push notifications za simu zitaongezwa baadaye.</p>';
+    $("saveNotifications").addEventListener("click",async()=>{
+      const notifications_enabled=$("notificationToggle").checked;
+      const {error}=await sbClient.from("profiles").update({notifications_enabled}).eq("id",signedInUser.id);
+      if(error)return showToast("Arifa: "+error.message);
+      state.profile.notifications=notifications_enabled;detail.hidden=true;showToast("Upendeleo wa arifa umehifadhiwa.");
+    });
+  }else if(type==="help"){
+    detail.innerHTML="<h3>Msaada wa SMS TAMU</h3><p>Feed, likes, comments, profile, follow na chat zimeunganishwa na Supabase. Ujumbe wa chat huonekana kwa washiriki wa mazungumzo pekee.</p>";
+  }
+}
