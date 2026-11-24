@@ -986,7 +986,7 @@ async function renderAdminUsers(){
 async function renderAdminPosts(){
  if(!signedInUser||state.profile.role!=="admin")return;
  $("adminPosts").innerHTML='<div class="empty-state">Inapakia posts...</div>';
- const {data,error}=await sbClient.from("posts").select("id,user_id,content,category,status,created_at,profiles(display_name,username)").order("created_at",{ascending:false}).limit(500);
+ const {data,error}=await sbClient.from("posts").select("id,user_id,content,category,status,created_at,profiles!posts_user_id_fkey(display_name,username)").order("created_at",{ascending:false}).limit(500);
  if(error){$("adminPosts").innerHTML='<div class="empty-state">Posts hazijapakiwa: '+escapeHTML(error.message)+'</div>';return;}
  adminPostsCache=data||[];
  const term=($("adminPostSearch").value||"").trim().toLowerCase(),filter=$("adminPostFilter").value;
@@ -1096,7 +1096,7 @@ function getPostFromElement(element) {
 async function loadCloudPosts() {
   if (!sbClient || !signedInUser) return;
   const { data, error } = await sbClient.from("posts")
-    .select("id,user_id,content,category,format,status,created_at,profiles(display_name,username,verified,avatar_url,premium_until)")
+    .select("id,user_id,content,category,format,status,created_at,profiles!posts_user_id_fkey(display_name,username,verified,avatar_url,premium_until)")
     .eq("status","published").order("created_at",{ascending:false}).limit(100);
   if (error) { showToast("Feed haijapakiwa: " + error.message); return; }
   const ids=(data||[]).map(p=>p.id);
@@ -1104,7 +1104,7 @@ async function loadCloudPosts() {
   if(ids.length){
     const [l,c,s]=await Promise.all([
       sbClient.from("post_likes").select("post_id,user_id").in("post_id",ids),
-      sbClient.from("comments").select("id,post_id,user_id,content,created_at,profiles(display_name,username)").in("post_id",ids).order("created_at",{ascending:true}),
+      sbClient.from("comments").select("id,post_id,user_id,content,created_at,profiles!posts_user_id_fkey(display_name,username)").in("post_id",ids).order("created_at",{ascending:true}),
       sbClient.from("saved_posts").select("post_id").eq("user_id",signedInUser.id).in("post_id",ids)
     ]);
     if(!l.error)likes=l.data||[];
@@ -1182,7 +1182,7 @@ async function loadLiveChats() {
 async function loadLiveMessages(conversationId) {
   if(!signedInUser||!conversationId)return;
   const {data,error}=await sbClient.from("messages")
-    .select("id,conversation_id,sender_id,content,created_at,profiles(display_name,username)")
+    .select("id,conversation_id,sender_id,content,created_at,profiles!posts_user_id_fkey(display_name,username)")
     .eq("conversation_id",conversationId).order("created_at",{ascending:true}).limit(300);
   if(error){showToast("Ujumbe haujapakiwa: "+error.message);return;}
   state.messages[conversationId]=(data||[]).map(m=>{
@@ -1432,11 +1432,11 @@ function openSettingsDetail(type) {
 /* Premium text library: RLS-enforced access, favorites, collections, daily text and generator */
 let premiumTextsCache=[],premiumFavorites=new Set(),premiumCollections=[],premiumCurrentView="library",premiumCurrentCategory="all",premiumDailyContent="";
 let premiumEditingId=null;
-const premiumActive=()=>state.profile.role==="admin"||(state.profile.premiumUntil&&new Date(state.profile.premiumUntil)>new Date());
+const premiumActive=()=>!!(state.profile.premiumUntil&&new Date(state.profile.premiumUntil)>new Date());
 function premiumNeedLogin(){if(!signedInUser){showToast("Ingia kwanza kutumia Premium Library.");$("authDialog").showModal();return false;}return true;}
 async function premiumLoad(){
  if(!sbClient||!signedInUser){$("premiumLibraryList").innerHTML='<div class="empty-state">Ingia ili kutumia library.</div>';return;}
- const active=premiumActive();$("premiumLocked").hidden=active;
+ const active=premiumActive();$("premiumLocked").hidden=active;document.querySelectorAll(".premium-daily,.premium-generator,.premium-tools,.premium-category-strip").forEach(el=>el.hidden=!active);
  const {data,error}=await sbClient.from("premium_texts").select("id,title,content,category,collection,is_premium,is_daily,featured,status,created_at").order("created_at",{ascending:false}).limit(500);
  if(error){$("premiumLibraryList").innerHTML='<div class="empty-state">Library: '+escapeHTML(error.message)+'</div>';return;}
  premiumTextsCache=data||[];
