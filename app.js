@@ -213,7 +213,7 @@ function goToScreen(screenId) {
 
   if (screenId === "profileScreen") renderProfile();
   if (screenId === "chatScreen") renderChats();
-  if (screenId === "searchScreen") renderSearch($("searchInput").value);
+  if (screenId === "searchScreen") { renderSearch($("searchInput").value); searchLiveUsers($("searchInput").value); }
   if (screenId === "composeScreen") $("postText").focus();
 
   if (activeChat && screenId !== "chatScreen") closeChat();
@@ -1307,14 +1307,14 @@ document.addEventListener("click",async event=>{
     event.preventDefault();event.stopImmediatePropagation();
     const {error}=await sbClient.from("follows").insert({follower_id:signedInUser.id,followed_id:follow.dataset.follow});
     if(error&&error.code!=="23505")return showToast("Follow: "+error.message);
-    await loadLiveSocial();openProfileList("followers");return;
+    await loadLiveSocial();if(follow.closest(".search-user-row"))searchLiveUsers($("searchInput").value);else openProfileList("followers");return;
   }
   const unfollow=event.target.closest("[data-unfollow]");
   if(unfollow){
     event.preventDefault();event.stopImmediatePropagation();
     const {error}=await sbClient.from("follows").delete().eq("follower_id",signedInUser.id).eq("followed_id",unfollow.dataset.unfollow);
     if(error)return showToast("Unfollow: "+error.message);
-    await loadLiveSocial();openProfileList("following");return;
+    await loadLiveSocial();if(unfollow.closest(".search-user-row"))searchLiveUsers($("searchInput").value);else openProfileList("following");return;
   }
   const save=event.target.closest('[data-action="save"]');
   if(save){
