@@ -327,12 +327,20 @@ function openProfileList(type) {
   $("listDialogTitle").textContent = type === "following" ? "Unafuata" : "Wafuasi";
 
   $("listDialogContent").innerHTML = list.length
-    ? list.map(person => `
-      <div class="person-row">
-        <span class="avatar pink">${escapeHTML(person.name.charAt(0).toUpperCase())}</span>
-        <span class="person-info"><strong>${escapeHTML(person.name)}</strong><small>@${escapeHTML(person.username)}</small></span>
-        ${type === "following" ? '<button class="person-action" data-unfollow="' + escapeHTML(person.id) + '">Unafuata</button>' : ""}
-      </div>`).join("")
+    ? list.map(person => {
+      const isFollowing = state.following.some(item => item.id === person.id);
+      const action = type === "following"
+        ? '<button class="person-action" data-unfollow="' + escapeHTML(person.id) + '">Unafuata</button>'
+        : (isFollowing
+          ? '<button class="person-action" data-unfollow="' + escapeHTML(person.id) + '">Unafuata</button>'
+          : '<button class="person-action" data-follow="' + escapeHTML(person.id) + '">Fuata</button>');
+
+      return '<div class="person-row">' +
+        '<span class="avatar pink">' + escapeHTML(person.name.charAt(0).toUpperCase()) + '</span>' +
+        '<span class="person-info"><strong>' + escapeHTML(person.name) + '</strong><small>@' + escapeHTML(person.username) + '</small></span>' +
+        action +
+      '</div>';
+    }).join("")
     : '<div class="empty-state">Orodha bado haina mtu.</div>';
 
   $("listDialog").showModal();
@@ -428,6 +436,19 @@ document.addEventListener("click", async event => {
       }
     } else {
       openSettingsDetail(setting);
+    }
+    return;
+  }
+
+  const followButton = event.target.closest("[data-follow]");
+  if (followButton) {
+    const person = state.followers.find(item => item.id === followButton.dataset.follow);
+    if (person && !state.following.some(item => item.id === person.id)) {
+      state.following.push(person);
+      saveState();
+      renderProfile();
+      openProfileList("followers");
+      showToast("Sasa unamfuata " + person.name + ".");
     }
     return;
   }
