@@ -246,7 +246,7 @@ function renderProfile() {
   $("profileName").textContent = profile.name || "Mtumiaji";
   $("profileUsername").textContent = "@" + (profile.username || "user");
   $("profileBio").textContent = profile.bio || "Karibu SMS TAMU.";
-  $("profileVerified").hidden = true;
+  $("profileVerified").hidden = !profile.verified;
   $("profileAvatar").innerHTML = profile.avatar
     ? '<img src="' + escapeHTML(profile.avatar) + '" alt="Picha ya wasifu">'
     : escapeHTML((profile.name || "U").charAt(0).toUpperCase());
