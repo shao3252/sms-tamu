@@ -195,11 +195,12 @@ function postCard(post) {
             ${escapeHTML(post.name)}
             ${post.verified ? '<span class="verified-badge small-verified">✓</span>' : ""}
           </div>
-          <div class="post-time">${escapeHTML(post.time || "159d ago")} <span class="post-tag">${escapeHTML(post.category || "Ujumbe")}</span> <span class="post-owner-tag">✏️ Kundi</span></div>
+          <div class="post-time">${escapeHTML(post.time || "159d ago")} <span class="post-tag">${escapeHTML(post.category || "Ujumbe")}</span> <span class="post-owner-tag">✏️ ${escapeHTML(post.group || "SMS TAMU GROUP")}</span></div>
         </div>
         ${isMine ? '<button class="more-post-button" data-action="post-menu" aria-label="Chaguo za posti">⋯</button>' : ""}
       </div>
-      <p class="post-text">${escapeHTML(post.text)}</p>
+      ${post.status === "pending" ? '<span class="pending-tag">Inasubiri ukaguzi</span>' : ""}
+    <p class="post-text">${escapeHTML(post.text)}</p>
       <div class="post-actions">
         <button class="action-button like-button ${post.liked ? "liked" : ""}" data-action="like"><span class="action-icon">${post.liked ? "♥" : "♡"}</span><span>${post.likes}</span></button>
         <button class="action-button" data-action="comment"><span class="action-icon">☏</span><span>${post.comments.length}</span></button>
