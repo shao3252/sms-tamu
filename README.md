@@ -1,16 +1,28 @@
 # SMS TAMU
 
-Website ya SMS TAMU, imeandikwa kwa HTML, CSS na JavaScript.
+SMS TAMU ni social app ya Kiswahili ya kushiriki ujumbe wa mapenzi na kuwasiliana.
 
 ## Files
-- `index.html` — kurasa zote za app (Karibu, login, forgot password na preview baada ya login).
-- `style.css` — muonekano wa website.
-- `app.js` — tabia na mwingiliano wa website.
+- `index.html` — app interface ya normal user.
+- `style.css` — muonekano wa app.
+- `app.js` — feed, likes, comments, search, post composer, chat demo na profile interactions.
 
-## Demo login
-- Username: `smsdemo`
-- Password: `123456`
+## Normal user demo features
+- Feed ya ujumbe na category filters
+- Like / unlike
+- Comments
+- Copy na share ujumbe
+- Save posts
+- Search ujumbe na watumiaji
+- Kuandika na kushiriki post
+- Chat UI ya demo
+- Wasifu na kuhariri jina/username
 
-Au tumia namba `0712345678` na password `123456`.
+## Demo data na storage
+Hivi sasa ni front-end demo. Data ya posts, likes, comments, chat na profile inahifadhiwa kwenye browser ya mtumiaji kupitia localStorage. Hii haimaanishi kuwa ujumbe unasambazwa kwa watumiaji wengine au kuhifadhiwa kwenye server/database.
 
-**Kumbuka:** Login hii ni demo ya upande wa browser tu, si mfumo salama wa akaunti halisi. Uthibitishaji na kurejesha password vinahitaji backend/database.
+## Admin access
+Admin Dashboard haijawekwa kwenye normal user interface. Admin role itahitaji database/backend authentication na authorization. Server lazima ithibitishe role ya admin kabla ya kuruhusu admin actions; kuficha icon kwenye front-end pekee si usalama wa kutosha.
+
+## Run
+Fungua `index.html` kwenye browser au host files hizi kwenye static hosting.
