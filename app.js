@@ -1,3 +1,20 @@
+function iconSVG(name, filled = false) {
+  const paths = {
+    heart: '<path d="M20.8 4.8a5.4 5.4 0 0 0-7.6 0L12 6l-1.2-1.2a5.4 5.4 0 0 0-7.6 7.6L12 21l8.8-8.6a5.4 5.4 0 0 0 0-7.6Z"/>',
+    bookmark: '<path d="M6 3h12v18l-6-4-6 4z"/>',
+    comment: '<path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l1.7-3.8A7.5 7.5 0 1 1 20 11.5Z"/>',
+    copy: '<rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3"/>',
+    share: '<path d="M12 16V3m0 0L7 8m5-5 5 5"/><path d="M5 13v7h14v-7"/>',
+    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+    edit: '<path d="m4 16.5-.8 4.3 4.3-.8L20 7.5 16.5 4z"/><path d="m14.8 5.7 3.5 3.5"/>',
+    trash: '<path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v7m6-7v7"/>'
+  };
+  return '<svg class="ui-icon action-svg" viewBox="0 0 24 24" aria-hidden="true" fill="' +
+    (filled && (name === "heart" || name === "bookmark") ? "currentColor" : "none") +
+    '" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+    (paths[name] || paths.heart) + '</svg>';
+}
+
 // SMS TAMU - normal user app (front-end demo)
 const $ = (id) => document.getElementById(id);
 const STORAGE_KEY = "sms-tamu-user-demo-v1";
@@ -222,15 +239,15 @@ function postCard(post) {
       </div>
     <p class="post-text">${escapeHTML(post.text)}</p>
       <div class="post-actions">
-        <button class="action-button like-button ${post.liked ? "liked" : ""}" data-action="like"><span class="action-icon">${post.liked ? "♥" : "♡"}</span><span>${post.likes}</span></button>
-        <button class="action-button" data-action="comment"><span class="action-icon">☏</span><span>${(post.comments || []).length}</span></button>
-        <button class="action-button" data-action="copy"><span class="action-icon">▤</span><span>Copy</span></button>
-        <button class="action-button" data-action="share"><span class="action-icon">🚀</span><span>Share</span></button>
-        <button class="action-button ${post.saved ? "liked" : ""}" data-action="save"><span class="action-icon">${post.saved ? "★" : "☆"}</span><span>Save</span></button>
+        <button class="action-button like-button ${post.liked ? "liked" : ""}" data-action="like"><span class="action-icon">${iconSVG("heart", post.liked)}</span><span>${post.likes}</span></button>
+        <button class="action-button" data-action="comment"><span class="action-icon">${iconSVG("comment")}</span><span>${(post.comments || []).length}</span></button>
+        <button class="action-button" data-action="copy"><span class="action-icon">${iconSVG("copy")}</span><span>Copy</span></button>
+        <button class="action-button" data-action="share"><span class="action-icon">${iconSVG("share")}</span><span>Share</span></button>
+        <button class="action-button ${post.saved ? "liked" : ""}" data-action="save"><span class="action-icon">${iconSVG("bookmark", post.saved)}</span><span>Save</span></button>
       </div>
       <div class="post-extra-actions">
-        <button data-action="likes">+ Likes</button>
-        ${isMine ? '<button data-action="edit">✏️ Edit</button><button class="delete-post" data-action="delete">🗑 Futa</button>' : ""}
+        <button data-action="likes">${iconSVG("users")} Likes</button>
+        ${isMine ? '<button data-action="edit">${iconSVG("edit")} Edit</button><button class="delete-post" data-action="delete">${iconSVG("trash")} Futa</button>' : ""}
       </div>
     </article>`;
 }
