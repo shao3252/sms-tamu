@@ -302,6 +302,28 @@ function renderProfile() {
   renderFeed("myPosts", shown.filter(post => post.status !== "removed"));
 }
 
+async function searchLiveUsers(query){
+ const target=$("searchUserResults");if(!target)return;
+ const term=(query||"").trim();
+ if(!signedInUser||term.length<2){target.innerHTML='<div class="empty-state">'+(signedInUser?'Andika angalau herufi 2.':'Ingia ili kutafuta watumiaji.')+'</div>';return;}
+ target.innerHTML='<div class="empty-state">Inatafuta watumiaji...</div>';
+ const pattern="%"+term.replace(/[%_]/g,"\\function getPostFromElement(element) {")+"%";
+ const [byName,byUser]=await Promise.all([
+  sbClient.from("profiles").select("id,username,display_name,avatar_url,verified,premium_until").ilike("display_name",pattern).limit(12),
+  sbClient.from("profiles").select("id,username,display_name,avatar_url,verified,premium_until").ilike("username",pattern).limit(12)
+ ]);
+ if(byName.error||byUser.error){target.innerHTML='<div class="empty-state">Search haijafanikiwa. Jaribu tena.</div>';return;}
+ const map=new Map();[...(byName.data||[]),...(byUser.data||[])].forEach(p=>{if(p.id!==signedInUser.id)map.set(p.id,p);});
+ const users=[...map.values()].slice(0,15);
+ target.innerHTML=users.map(p=>{
+  const following=state.following.some(f=>f.id===p.id);
+  const name=p.display_name||p.username||"Mtumiaji";
+  return '<article class="search-user-row" data-search-user="'+escapeHTML(p.id)+'">'+
+   '<span class="avatar-image">'+(p.avatar_url?'<img src="'+escapeHTML(p.avatar_url)+'" alt="">':escapeHTML((name||"U").charAt(0).toUpperCase()))+'</span>'+
+   '<div class="search-user-info"><strong>'+escapeHTML(name)+(p.verified?' <span class="verified-badge small-verified">✓</span>':'')+'</strong><small>@'+escapeHTML(p.username||"user")+'</small></div>'+
+   '<div class="search-user-actions"><button class="person-action" '+(following?'data-unfollow="'+escapeHTML(p.id)+'"':'data-follow="'+escapeHTML(p.id)+'"')+'>'+(following?'Unafuata':'Fuata')+'</button><button class="person-action" data-message-user-id="'+escapeHTML(p.id)+'">Message</button></div></article>';
+ }).join("")||'<div class="empty-state">Hakuna mtumiaji wa wazi aliyepatikana.</div>';
+}
 function getPostFromElement(element) {
   const card = element.closest("[data-post-id]");
   if (!card) return null;
@@ -595,7 +617,7 @@ document.addEventListener("click", async event => {
 });
 
 $("headerSearch").addEventListener("click", () => goToScreen("searchScreen"));
-$("searchInput").addEventListener("input", event => renderSearch(event.target.value));
+$("searchInput").addEventListener("input", event => { renderSearch(event.target.value); searchLiveUsers(event.target.value); });
 $("postText").addEventListener("input", event => {
   $("characterCount").textContent = event.target.value.length + "/700";
 });
@@ -872,7 +894,7 @@ async function loadCloudPosts() {
       liked:postLikes.some(x=>x.user_id===signedInUser.id),saved:false,comments:postComments,
       mine:p.user_id===signedInUser.id };
   });
-  renderHome(); renderSearch($("searchInput").value); renderProfile();
+  renderHome(); renderSearch($("searchInput").value); searchLiveUsers($("searchInput").value); renderProfile();
 }
 async function loadUserProfile() {
   if (!signedInUser) return;
@@ -1104,7 +1126,7 @@ async function loadCloudPosts() {
       liked:postLikes.some(x=>x.user_id===signedInUser.id),saved:saved.includes(p.id),
       comments:postComments,mine:p.user_id===signedInUser.id};
   });
-  renderHome();renderSearch($("searchInput").value);renderProfile();
+  renderHome();renderSearch($("searchInput").value);searchLiveUsers($("searchInput").value);renderProfile();
 }
 
 async function loadLiveSocial() {
