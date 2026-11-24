@@ -64,14 +64,28 @@
             <h2 id="loginTitle">Log in</h2>
             <p class="intro">Ingia kwenye akaunti yako kuendelea.</p>
             <form id="loginForm">
-                <label for="email">Email au username</label>
-                <input id="email" name="email" type="text" placeholder="Andika email au username" autocomplete="username" required>
+                <label for="loginId">Email, username au namba ya simu</label>
+                <input id="loginId" name="loginId" type="text" placeholder="Email, username au simu" autocomplete="username" required>
                 <label for="password">Password</label>
                 <input id="password" name="password" type="password" placeholder="Andika password yako" autocomplete="current-password" required>
                 <button class="button" type="submit">Log in</button>
+                <button class="back-button" id="forgotButton" type="button">Forgot password?</button>
                 <p class="notice" id="loginNotice" role="status">Muonekano wa login umewekwa. Mfumo wa akaunti utaunganishwa baadaye.</p>
             </form>
             <button class="back-button" id="backButton" type="button">← Rudi nyuma</button>
+        </section>
+
+        <section class="login-card" id="forgotSection" aria-labelledby="forgotTitle">
+            <div class="eyebrow">SMS TAMU</div>
+            <h2 id="forgotTitle">Forgot password?</h2>
+            <p class="intro">Weka email au namba ya simu uliyoitumia. Mfumo wa kurejesha password utaunganishwa na database baadaye.</p>
+            <form id="forgotForm">
+                <label for="recoveryId">Email au namba ya simu</label>
+                <input id="recoveryId" name="recoveryId" type="text" placeholder="Email au namba ya simu" required>
+                <button class="button" type="submit">Endelea</button>
+                <p class="notice" id="forgotNotice" role="status">Sehemu hii ni preview tu. Urejeshaji wa password utaanza baada ya kuunganisha database.</p>
+            </form>
+            <button class="back-button" id="forgotBackButton" type="button">← Rudi kwenye Log in</button>
         </section>
     </main>
 
@@ -82,6 +96,7 @@
 
         const welcomeSection = document.getElementById("welcomeSection");
         const loginSection = document.getElementById("loginSection");
+        const forgotSection = document.getElementById("forgotSection");
 
         document.getElementById("welcomeButton").addEventListener("click", function () {
             welcomeSection.style.display = "none";
@@ -94,9 +109,34 @@
             document.getElementById("loginNotice").style.display = "none";
         });
 
+        document.getElementById("forgotButton").addEventListener("click", function () {
+            loginSection.style.display = "none";
+            forgotSection.style.display = "block";
+        });
+
+        document.getElementById("forgotBackButton").addEventListener("click", function () {
+            forgotSection.style.display = "none";
+            loginSection.style.display = "block";
+            document.getElementById("forgotNotice").style.display = "none";
+        });
+
         document.getElementById("loginForm").addEventListener("submit", function (event) {
             event.preventDefault();
-            document.getElementById("loginNotice").style.display = "block";
+            const loginId = document.getElementById("loginId").value.trim();
+            const password = document.getElementById("password").value;
+            const allowedIds = ["smsdemo", "0712345678"];
+            if (allowedIds.includes(loginId) && password === "123456") {
+                document.getElementById("loginNotice").textContent = "Umeingia kwa mafanikio kwenye preview ya SMS TAMU!";
+                document.getElementById("loginNotice").style.display = "block";
+            } else {
+                document.getElementById("loginNotice").textContent = "Username/namba au password si sahihi. Tumia akaunti ya majaribio iliyoonyeshwa kwenye maelekezo.";
+                document.getElementById("loginNotice").style.display = "block";
+            }
+        });
+
+        document.getElementById("forgotForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            document.getElementById("forgotNotice").style.display = "block";
         });
     </script>
 </body>
