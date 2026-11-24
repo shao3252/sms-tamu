@@ -17,9 +17,9 @@ The browser uses the Supabase publishable key only. Never put a `service_role` o
 - Feed posts stored in `posts`, with realtime feed refresh.
 - Likes, comments and saved posts stored in the database.
 - Profile name, username, bio, avatar, privacy and notification preference saved to `profiles`.
-- Followers/following stored in `follows`.
+- Followers/following stored in `follows`, with public user discovery by name/username in Search (private profiles are hidden by RLS).
 - Public SMS TAMU group and private direct chats stored in `conversations`, `conversation_members` and `messages`.
-- Realtime chat updates for messages.
+- Realtime chat updates for messages, conversation membership and saved posts.
 - Profile privacy is enforced by RLS for profiles, posts and comments.
 - Admin verification, Premium, role management and live post moderation (hide/restore/delete) are available in Admin Control Center.
 
