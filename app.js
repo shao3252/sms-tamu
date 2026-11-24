@@ -1247,7 +1247,7 @@ function startLiveSubscriptions() {
   if(!sbClient||!signedInUser)return;
   if(liveChannel)sbClient.removeChannel(liveChannel);
   liveChannel=sbClient.channel("sms-tamu-live-"+signedInUser.id)
-    .on("postgres_changes",{event:"*",schema:"public",table:"posts"},()=>loadCloudPosts())
+    .on("postgres_changes",{event:"*",schema:"public",table:"posts"},()=>{loadCloudPosts();if($("adminDialog").open){renderAdminPosts();renderAdminUsers();}})
     .on("postgres_changes",{event:"*",schema:"public",table:"comments"},()=>loadCloudPosts())
     .on("postgres_changes",{event:"*",schema:"public",table:"post_likes"},()=>loadCloudPosts())
     .on("postgres_changes",{event:"*",schema:"public",table:"saved_posts"},()=>loadCloudPosts())
