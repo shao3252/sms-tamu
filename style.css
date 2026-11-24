@@ -740,3 +740,25 @@ button {
 .chat-window{box-shadow:0 8px 35px #25252c12}
 .bubble{overflow-wrap:anywhere;white-space:pre-wrap}
 @media(max-width:420px){.person-actions-live{width:100%;justify-content:flex-end}.person-row{flex-wrap:wrap}}
+
+
+/* Admin panel dashboard */
+.admin-dialog{width:min(96vw,820px);max-width:820px}
+.admin-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+.admin-stat{background:linear-gradient(145deg,#fff5f9,#fff);border:1px solid #f2dce7;border-radius:14px;padding:13px;display:grid;gap:5px}
+.admin-stat small{font-size:11px;color:#8c7b87}
+.admin-stat strong{font-size:23px;color:#d83e79}
+.admin-toolbar{display:grid;grid-template-columns:minmax(140px,1fr) 170px auto;gap:8px;margin:14px 0 8px}
+.admin-toolbar input,.admin-toolbar select{min-width:0;width:100%;border:1px solid #eadde5;background:#fff;border-radius:11px;padding:11px 12px;font-size:12px;outline-color:#f44786}
+.admin-toolbar button{border:0;border-radius:11px;padding:10px 13px;background:#f44786;color:white;font-size:12px;font-weight:700}
+.admin-result-count{font-size:11px;color:#8c7b87;margin:8px 2px}
+.admin-user-row{align-items:flex-start}
+.admin-user-info{flex:1}
+.admin-user-info .admin-user-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.admin-user-tags span{font-size:10px;border-radius:20px;padding:4px 7px;background:#f5f1f4;color:#817580}
+.admin-user-tags .tag-verified{background:#e9f5ff;color:#1782c4}
+.admin-user-tags .tag-premium{background:#fff0c9;color:#946500}
+.admin-user-tags .tag-admin{background:#eee7ff;color:#7250b8}
+.admin-user-actions button:disabled{opacity:.45;cursor:not-allowed}
+.admin-user-actions button[data-admin-action="role"]{background:#f5f1ff;border-color:#e1d5ff;color:#7250b8}
+@media(max-width:560px){.admin-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-toolbar{grid-template-columns:1fr 1fr}.admin-toolbar input{grid-column:1/-1}.admin-toolbar button{grid-column:1/-1}.admin-user-actions button{font-size:10px;padding:7px}}
