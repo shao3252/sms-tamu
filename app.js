@@ -224,54 +224,23 @@ function renderFeed(targetId, posts) {
 }
 
 function renderHome() {
+  const approvedPosts = state.posts.filter(post => post.status !== "pending");
   const posts = activeCategory === "Vyote"
-    ? state.posts
-    : state.posts.filter(post => post.category === activeCategory);
-
+    ? approvedPosts
+    : approvedPosts.filter(post => post.category === activeCategory);
   renderFeed("feed", posts);
 }
 
 function renderSearch(query) {
   const term = (query || "").trim().toLowerCase();
+  const approvedPosts = state.posts.filter(post => post.status !== "pending");
   const results = !term
-    ? state.posts
-    : state.posts.filter(post =>
-      (post.text + " " + post.name + " " + post.username + " " + post.category)
+    ? approvedPosts
+    : approvedPosts.filter(post =>
+      (post.text + " " + post.name + " " + post.username + " " + post.category + " " + (post.group || ""))
         .toLowerCase().includes(term)
     );
-
   renderFeed("searchResults", results);
-}
-
-function renderProfile() {
-  const profile = state.profile;
-
-  $("profileName").textContent = profile.name;
-  $("profileUsername").textContent = "@" + profile.username;
-  $("profileBio").textContent = profile.bio || "Hakuna bio bado.";
-  $("profileVerified").hidden = !profile.verified;
-  $("followingCount").textContent = state.following.length;
-  $("followersCount").textContent = state.followers.length;
-
-  const avatar = $("profileAvatar");
-  avatar.innerHTML = profile.avatar
-    ? `<img src="${profile.avatar}" alt="Picha ya wasifu">`
-    : escapeHTML((profile.name || "U").charAt(0).toUpperCase());
-
-  document.querySelectorAll(".profile-tab").forEach(tab => {
-    tab.classList.toggle("active", tab.dataset.profileTab === activeProfileTab);
-  });
-
-  let posts = [];
-  if (activeProfileTab === "posts") {
-    posts = state.posts.filter(post => post.username === profile.username || post.mine);
-  } else if (activeProfileTab === "liked") {
-    posts = state.posts.filter(post => post.liked);
-  } else if (activeProfileTab === "saved") {
-    posts = state.posts.filter(post => post.saved);
-  }
-
-  renderFeed("myPosts", posts);
 }
 
 function getPostFromElement(element) {
@@ -571,6 +540,8 @@ $("postForm").addEventListener("submit", event => {
     username: state.profile.username,
     verified: state.profile.verified,
     category: $("postCategory").value,
+    group: $("postGroup").value,
+    status: "pending",
     text,
     likes: 0,
     liked: false,
@@ -589,7 +560,7 @@ $("postForm").addEventListener("submit", event => {
   });
   renderHome();
   goToScreen("homeScreen");
-  showToast("Ujumbe wako umeshirikishwa!");
+  showToast("Posti imetumwa kwa ukaguzi. Itaonekana baada ya kuidhinishwa.");
 });
 
 $("closeComments").addEventListener("click", () => $("commentsDialog").close());
