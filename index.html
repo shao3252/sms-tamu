@@ -7,96 +7,96 @@
     <style>
         * { box-sizing: border-box; }
         body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #090909;
-            color: #f5f5f5;
-            display: flex;
-            flex-direction: column;
+            margin: 0; min-height: 100vh; font-family: Arial, Helvetica, sans-serif;
+            background: #090909; color: #f5f5f5; display: flex; flex-direction: column;
         }
         header {
-            padding: 22px 7%;
-            display: flex;
-            align-items: center;
+            padding: 22px 7%; display: flex; align-items: center;
             border-bottom: 1px solid #242424;
         }
         .logo { font-size: 1.25rem; font-weight: 800; letter-spacing: 1px; }
         .logo span { color: #e9b44c; }
-        main {
-            flex: 1;
-            display: grid;
-            place-items: center;
-            text-align: center;
-            padding: 70px 20px;
-        }
-        .content { max-width: 720px; }
-        .eyebrow {
-            color: #e9b44c;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            font-size: .8rem;
-            font-weight: 700;
-        }
-        h1 {
-            font-size: clamp(2.5rem, 7vw, 5rem);
-            line-height: 1.05;
-            margin: 20px 0;
-        }
+        main { flex: 1; display: grid; place-items: center; text-align: center; padding: 50px 20px; }
+        .content { width: 100%; max-width: 720px; }
+        .eyebrow { color: #e9b44c; text-transform: uppercase; letter-spacing: 3px; font-size: .8rem; font-weight: 700; }
+        h1 { font-size: clamp(2.5rem, 7vw, 5rem); line-height: 1.05; margin: 20px 0; }
         h1 span { color: #e9b44c; }
-        p {
-            color: #bdbdbd;
-            font-size: 1.1rem;
-            line-height: 1.8;
-            margin: 0 auto 32px;
-            max-width: 560px;
-        }
+        p { color: #bdbdbd; font-size: 1.1rem; line-height: 1.8; margin: 0 auto 32px; max-width: 560px; }
         .button {
-            display: inline-block;
-            padding: 14px 28px;
-            background: #e9b44c;
-            color: #111;
-            border: 0;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 700;
-            cursor: pointer;
+            display: inline-block; padding: 14px 28px; background: #e9b44c; color: #111;
+            border: 0; text-decoration: none; border-radius: 8px; font-weight: 700; cursor: pointer;
         }
-        footer {
-            padding: 20px;
-            text-align: center;
-            color: #777;
-            border-top: 1px solid #242424;
-            font-size: .85rem;
+        .login-card {
+            display: none; width: 100%; max-width: 420px; text-align: left;
+            background: #111; border: 1px solid #292929; border-radius: 16px; padding: 30px;
         }
+        .login-card h2 { margin: 0 0 10px; font-size: 2rem; }
+        .login-card .intro { margin: 0 0 24px; font-size: .95rem; }
+        label { display: block; margin: 16px 0 8px; color: #ddd; font-size: .9rem; }
+        input {
+            width: 100%; padding: 13px 14px; border: 1px solid #333; border-radius: 8px;
+            background: #090909; color: #fff; font: inherit; outline: none;
+        }
+        input:focus { border-color: #e9b44c; }
+        .login-card .button { width: 100%; margin-top: 22px; font-size: 1rem; }
+        .back-button {
+            display: block; margin: 18px auto 0; background: none; border: 0;
+            color: #c9c9c9; cursor: pointer; font: inherit;
+        }
+        .notice { display: none; color: #e9b44c; font-size: .9rem; margin: 14px 0 0; text-align: center; }
+        footer { padding: 20px; text-align: center; color: #777; border-top: 1px solid #242424; font-size: .85rem; }
+        @media (max-width: 480px) { .login-card { padding: 24px 20px; } }
     </style>
 </head>
 <body>
-    <header>
-        <div class="logo">SMS <span>TAMU</span></div>
-    </header>
+    <header><div class="logo">SMS <span>TAMU</span></div></header>
 
     <main>
-        <section class="content">
+        <section class="content" id="welcomeSection">
             <div class="eyebrow">Karibu kwenye SMS TAMU</div>
             <h1>Maneno mazuri,<br><span>hisia za kweli.</span></h1>
-            <p>
-                Pata ujumbe mtamu wa kuonyesha upendo, kujali na kuthamini
-                watu muhimu katika maisha yako.
-            </p>
+            <p>Pata ujumbe mtamu wa kuonyesha upendo, kujali na kuthamini watu muhimu katika maisha yako.</p>
             <button class="button" id="welcomeButton" type="button">Karibu</button>
+        </section>
+
+        <section class="login-card" id="loginSection" aria-labelledby="loginTitle">
+            <div class="eyebrow">SMS TAMU</div>
+            <h2 id="loginTitle">Log in</h2>
+            <p class="intro">Ingia kwenye akaunti yako kuendelea.</p>
+            <form id="loginForm">
+                <label for="email">Email au username</label>
+                <input id="email" name="email" type="text" placeholder="Andika email au username" autocomplete="username" required>
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" placeholder="Andika password yako" autocomplete="current-password" required>
+                <button class="button" type="submit">Log in</button>
+                <p class="notice" id="loginNotice" role="status">Muonekano wa login umewekwa. Mfumo wa akaunti utaunganishwa baadaye.</p>
+            </form>
+            <button class="back-button" id="backButton" type="button">← Rudi nyuma</button>
         </section>
     </main>
 
-    <footer>
-        &copy; <span id="year"></span> SMS TAMU. Haki zote zimehifadhiwa.
-    </footer>
+    <footer>&copy; <span id="year"></span> SMS TAMU. Haki zote zimehifadhiwa.</footer>
 
     <script>
         document.getElementById("year").textContent = new Date().getFullYear();
 
+        const welcomeSection = document.getElementById("welcomeSection");
+        const loginSection = document.getElementById("loginSection");
+
         document.getElementById("welcomeButton").addEventListener("click", function () {
-            this.textContent = "Karibu sana!";
+            welcomeSection.style.display = "none";
+            loginSection.style.display = "block";
+        });
+
+        document.getElementById("backButton").addEventListener("click", function () {
+            loginSection.style.display = "none";
+            welcomeSection.style.display = "block";
+            document.getElementById("loginNotice").style.display = "none";
+        });
+
+        document.getElementById("loginForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            document.getElementById("loginNotice").style.display = "block";
         });
     </script>
 </body>
