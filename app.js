@@ -5,7 +5,7 @@ function iconSVG(name, filled = false) {
     comment: '<path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l1.7-3.8A7.5 7.5 0 1 1 20 11.5Z"/>',
     copy: '<rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3"/>',
     share: '<path d="M12 16V3m0 0L7 8m5-5 5 5"/><path d="M5 13v7h14v-7"/>',
-    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>', pin: '<path d="m16 3 5 5-4 1-4 4 1 4-2 2-3-5-5-3 2-2 4 1 4-4z"/><path d="m9 15-6 6"/>',
     edit: '<path d="m4 16.5-.8 4.3 4.3-.8L20 7.5 16.5 4z"/><path d="m14.8 5.7 3.5 3.5"/>',
     trash: '<path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v7m6-7v7"/>'
   };
@@ -342,7 +342,7 @@ function openEditPost(post) {
 function renderChats() {
   $("chatList").innerHTML = state.chats.map(chat =>
     '<button class="chat-row" data-chat-id="' + escapeHTML(chat.id) + '">' +
-      '<span class="avatar pink">' + (chat.isGroup ? "👥" : escapeHTML(chat.name.charAt(0).toUpperCase())) + '</span>' +
+      '<span class="avatar pink">' + (chat.isGroup ? iconSVG("users") : escapeHTML(chat.name.charAt(0).toUpperCase())) + '</span>' +
       '<span class="chat-preview"><strong>' + escapeHTML(chat.name) + '</strong><p>' + escapeHTML(chat.last || "Anza mazungumzo") + '</p></span>' +
       '<time>' + (chat.isGroup ? "Kundi" : "DM") + '</time>' +
     '</button>'
@@ -731,10 +731,10 @@ $("chatList").addEventListener("click", event => {
 
   $("chatUserName").textContent = activeChat.name;
   $("chatStatus").textContent = "Demo ya kifaa hiki";
-  $("chatAvatar").textContent = activeChat.isGroup ? "👥" : activeChat.name.charAt(0).toUpperCase();
+  $("chatAvatar").textContent = activeChat.isGroup ? iconSVG("users") : activeChat.name.charAt(0).toUpperCase();
   $("groupSettingsButton").hidden = !activeChat.isGroup;
   $("pinnedBanner").hidden = !activeChat.isGroup;
-  if (activeChat.isGroup) $("pinnedBanner").textContent = "📌 Pinned: " + (activeChat.pinned || "Gusa kuona");
+  if (activeChat.isGroup) $("pinnedBanner").innerHTML = iconSVG("pin") + " Pinned: " + escapeHTML(activeChat.pinned || "Gusa kuona");
   $("chatWindow").hidden = false;
   renderMessages();
 });
