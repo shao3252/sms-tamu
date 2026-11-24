@@ -868,7 +868,7 @@ function updateAuthMode() {
 async function loadCloudPosts() {
   if (!sbClient || !signedInUser) return;
   const { data, error } = await sbClient.from("posts")
-    .select("id,user_id,content,category,format,status,created_at,profiles(display_name,username,verified,avatar_url,premium_until)")
+    .select("id,user_id,content,category,format,status,created_at,profiles!posts_user_id_fkey(display_name,username,verified,avatar_url,premium_until)")
     .eq("status","published").order("created_at",{ascending:false}).limit(100);
   if (error) { showToast("Feed error: " + error.message); return; }
   const ids = (data || []).map(p => p.id);
@@ -876,7 +876,7 @@ async function loadCloudPosts() {
   if (ids.length) {
     const l = await sbClient.from("post_likes").select("post_id,user_id").in("post_id",ids);
     if (!l.error) likes = l.data || [];
-    const c = await sbClient.from("comments").select("id,post_id,user_id,content,profiles(display_name,username)").in("post_id",ids);
+    const c = await sbClient.from("comments").select("id,post_id,user_id,content,profiles!comments_user_id_fkey(display_name,username)").in("post_id",ids);
     if (!c.error) comments = c.data || [];
   }
   state.posts = (data || []).map(p => {
