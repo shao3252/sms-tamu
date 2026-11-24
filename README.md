@@ -1,38 +1,28 @@
 # SMS TAMU
 
-SMS TAMU ni front-end demo ya app ya Kiswahili ya kushiriki ujumbe na kuwasiliana.
+SMS TAMU ni front-end demo ya Kiswahili ya kushiriki posti na kuwasiliana.
 
 ## Mafaili
-- `index.html` — normal-user interface na dialogs.
-- `style.css` — responsive layout, rangi na components.
-- `app.js` — feed, profile, posts, search, comments, chat groups na settings.
+- `index.html` — UI na dialogs.
+- `style.css` — layout na muonekano.
+- `app.js` — feed, profile, posts, search, comments na chat demo.
 - `README.md` — maelezo ya project.
 
-## Wasifu wa normal user
-- Badili picha ya wasifu kwa kugusa avatar; picha iwe chini ya 2MB.
-- Badili jina, username na bio.
-- Following na Followers: fungua orodha; unaweza ku-unfollow kwenye Following.
-- Tabs: Posti Zangu, Zilizopendwa na Zilizohifadhiwa.
-- Posti zako: like, comment, copy, share, save, edit na delete.
-- Mipangilio: faragha ya demo, arifa za demo, msaada na reset demo data.
-- Hakuna Admin Dashboard au admin access icon kwenye normal user profile.
+## Posti
+- Posti hutumwa kwenye feed mara moja, si kwenye Chat.
+- Chagua category na aina ya maandishi: ujumbe wa kawaida, caption fupi, shairi au status.
+- Posti zina like, comment, copy, share, save, edit na delete.
+- Posti huonekana kwenye profile ya mwenyewe.
 
-## Feed na post
-- Category filters na search.
-- Kuandika post, kuchagua kundi na category.
-- Post mpya hutumwa kwa review na huonekana kwa umma baada ya admin approval.
-- Post pending huonekana kwa mwenye akaunti kwenye Posti Zangu.
+## Wasifu na verification
+Profile ina jina, username, bio, picha, following/followers na tabs za posti, liked na saved.
+Normal user hawezi kujipa verification. Verification halisi lazima admin aidhinishe kupitia backend/database yenye admin permissions. Front-end hii bado haina admin authentication; badge ya demo haijaruhusiwa kwa normal user.
 
 ## Chat
-- SMS TAMU GROUP na Global Group demo chats.
-- DM demo chats.
-- Group pinned message, group name/topic, mute setting na leave group.
-- Chat messages huhifadhiwa kwenye browser hii pekee.
+Chat screen iko tofauti na feed/posts. DM na group chat kwa sasa ni demo ya browser hii; ujumbe unaohifadhiwa hapa hauonekani kwa users wengine. Live chat, group membership na DM halisi zinahitaji database na realtime backend.
 
-## Data na database
-Hii bado ni front-end demo. Profile, posts, likes, comments, group settings na chats huhifadhiwa kwenye localStorage. Hakuna data inayosawazishwa live kati ya watumiaji na hakuna server/database iliyounganishwa.
-
-Following/followers na sample messages ni demo data. Admin role itahitaji backend/database authentication na authorization; front-end pekee haiwezi kutoa admin security.
+## Data na usalama
+Hii ni static front-end demo inayotumia localStorage. Hakuna database/authentication iliyounganishwa. Admin permissions, verification na live messaging haviwezi kulindwa au kusawazishwa kwa HTML/CSS/JavaScript pekee.
 
 ## Kuendesha
-Fungua `index.html` kwenye browser au host files hizi kwenye static hosting.
+Fungua `index.html` au host files hizi kwenye static hosting.
