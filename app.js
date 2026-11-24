@@ -1250,6 +1250,7 @@ function startLiveSubscriptions() {
     .on("postgres_changes",{event:"*",schema:"public",table:"posts"},()=>loadCloudPosts())
     .on("postgres_changes",{event:"*",schema:"public",table:"comments"},()=>loadCloudPosts())
     .on("postgres_changes",{event:"*",schema:"public",table:"post_likes"},()=>loadCloudPosts())
+    .on("postgres_changes",{event:"*",schema:"public",table:"saved_posts"},()=>loadCloudPosts())
     .on("postgres_changes",{event:"*",schema:"public",table:"follows"},()=>loadLiveSocial())
     .on("postgres_changes",{event:"*",schema:"public",table:"profiles"},payload=>{
       const p=payload.new;
@@ -1260,6 +1261,8 @@ function startLiveSubscriptions() {
         $("adminSetting").hidden=state.profile.role!=="admin";renderProfile();
       }else loadCloudPosts();
     })
+    .on("postgres_changes",{event:"*",schema:"public",table:"conversation_members"},()=>loadLiveChats())
+    .on("postgres_changes",{event:"*",schema:"public",table:"conversations"},()=>loadLiveChats())
     .on("postgres_changes",{event:"*",schema:"public",table:"messages"},payload=>{
       const conversationId=payload.new?.conversation_id||payload.old?.conversation_id;
       if(activeChat&&activeChat.id===conversationId)loadLiveMessages(conversationId);
