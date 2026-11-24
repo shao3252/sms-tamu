@@ -1179,7 +1179,7 @@ async function loadLiveChats() {
     const p=other?profileMap.get(other.user_id):null;
     const latest=(messages.data||[]).find(m=>m.conversation_id===c.id);
     return {id:c.id,name:c.is_group?(c.title||"Kundi"):(p?.display_name||p?.username||"Mazungumzo"),
-      isGroup:!!c.is_group,otherUserId:other?.user_id||null,last:latest?.content||"Anza mazungumzo",
+      isGroup:!!c.is_group,otherUserId:other?.user_id||null,last:latest?.content||"Anza mazungumzo",lastAt:latest?.created_at||c.created_at,
       createdAt:c.created_at};
   });
   renderChats();
@@ -1213,7 +1213,7 @@ function renderChats() {
     '<button class="chat-row" data-chat-id="'+escapeHTML(chat.id)+'">'+
     '<span class="avatar pink">'+(chat.isGroup?iconSVG("users"):escapeHTML((chat.name||"U").charAt(0).toUpperCase()))+'</span>'+
     '<span class="chat-preview"><strong>'+escapeHTML(chat.name)+'</strong><p>'+escapeHTML(chat.last||"Anza mazungumzo")+'</p></span>'+
-    '<time>'+(chat.isGroup?"Kundi":"DM")+'</time></button>'
+    '<time>'+(chat.lastAt?new Date(chat.lastAt).toLocaleTimeString("sw-TZ",{hour:"2-digit",minute:"2-digit"}):(chat.isGroup?"Kundi":"DM"))+'</time></button>'
   ).join("")||'<div class="empty-state">'+(term?"Hakuna chat inayolingana na utafutaji.":"Hakuna mazungumzo. Tafuta mtu kwenye wafuasi na gusa Message.")+'</div>';
 }
 
