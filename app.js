@@ -910,7 +910,7 @@ $("authForm").addEventListener("submit",async event=>{
   $("authSubmit").disabled=true; authNotice(authMode==="signup"?"Inatengeneza akaunti...":"Inaingia...");
   try {
     if(authMode==="signup"){
-      const {data,error}=await sbClient.auth.signUp({email,password,options:{data:{display_name:$("authDisplayName").value.trim()}}});
+      const {data,error}=await sbClient.auth.signUp({email,password,options:{data:{display_name:$("authDisplayName").value.trim()},emailRedirectTo:window.location.origin+window.location.pathname}});
       if(error)throw error;
       if(!data.session)authNotice("Akaunti imetengenezwa. Angalia email uthibitishe, kisha ingia.");
       else {signedInUser=data.user;await loadUserProfile();}
@@ -923,7 +923,7 @@ $("authForm").addEventListener("submit",async event=>{
 });
 $("authForgot").addEventListener("click",async()=>{
   const email=$("authEmail").value.trim();if(!email)return authNotice("Andika email kwanza.",true);
-  const {error}=await sbClient.auth.resetPasswordForEmail(email);
+  const {error}=await sbClient.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});
   authNotice(error?error.message:"Link ya password imetumwa ikiwa email imesajiliwa.",!!error);
 });
 
