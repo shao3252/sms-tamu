@@ -981,7 +981,11 @@ async function renderAdminPosts(){
 }
 $("adminSearch").addEventListener("input",renderAdminRows);
 $("adminFilter").addEventListener("change",renderAdminRows);
-$("adminRefresh").addEventListener("click",renderAdminUsers);\n$("adminPostSearch").addEventListener("input",renderAdminPosts);\n$("adminPostFilter").addEventListener("change",renderAdminPosts);\n$("adminPostsRefresh").addEventListener("click",renderAdminPosts);\ndocument.querySelectorAll("[data-admin-tab]").forEach(tab=>tab.addEventListener("click",()=>{document.querySelectorAll("[data-admin-tab]").forEach(x=>x.classList.toggle("active",x===tab));$("adminUsersPane").classList.toggle("active",tab.dataset.adminTab==="users");$("adminPostsPane").classList.toggle("active",tab.dataset.adminTab==="posts");if(tab.dataset.adminTab==="posts")renderAdminPosts();}));
+$("adminRefresh").addEventListener("click",renderAdminUsers);
+$("adminPostSearch").addEventListener("input",renderAdminPosts);
+$("adminPostFilter").addEventListener("change",renderAdminPosts);
+$("adminPostsRefresh").addEventListener("click",renderAdminPosts);
+document.querySelectorAll("[data-admin-tab]").forEach(tab=>tab.addEventListener("click",()=>{document.querySelectorAll("[data-admin-tab]").forEach(x=>x.classList.toggle("active",x===tab));$("adminUsersPane").classList.toggle("active",tab.dataset.adminTab==="users");$("adminPostsPane").classList.toggle("active",tab.dataset.adminTab==="posts");if(tab.dataset.adminTab==="posts")renderAdminPosts();}));
 $("closeAdmin").addEventListener("click",()=>$("adminDialog").close());
 $("adminPosts").addEventListener("click",async event=>{
  const button=event.target.closest("[data-post-moderate],[data-post-delete]");if(!button||state.profile.role!=="admin")return;
